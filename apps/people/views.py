@@ -17,10 +17,12 @@ from rest_framework.decorators import api_view, permission_classes, action
 from apps.people.utils import send_notification
 from apps.people.auth import Authenticator
 from apps.people.utils import send_login_credentials
+
 # Create your views here.
 
 
 auth = Authenticator()
+
 
 class RoleViewset(viewsets.ModelViewSet):
     queryset = Role.objects.all()
@@ -128,7 +130,6 @@ class DepartmentViewset(viewsets.ModelViewSet):
 
 class UserViewset(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserListSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter]
     lookup_field = "uid"
@@ -195,13 +196,16 @@ class UserViewset(viewsets.ModelViewSet):
         )
 
     @action(
-        detail=False, methods=["post"], permission_classes=[permissions.AllowAny], url_path='update-password'
+        detail=False,
+        methods=["post"],
+        permission_classes=[permissions.AllowAny],
+        url_path="update-password",
     )
     def update_password(self, request, pk=None):
         data = request.data
-        email = data.get('email')
-        password = data.get('password')
-        confirm_password = data.get('confirm_password')
+        email = data.get("email")
+        password = data.get("password")
+        confirm_password = data.get("confirm_password")
 
         if not email:
             return Response(
@@ -214,13 +218,13 @@ class UserViewset(viewsets.ModelViewSet):
                 {"success": False, "info": "password is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         if not confirm_password:
             return Response(
                 {"success": False, "info": "confirm_password is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         if password != confirm_password:
             return Response(
                 {"success": False, "info": "passwords do no match"},
@@ -228,29 +232,33 @@ class UserViewset(viewsets.ModelViewSet):
             )
 
         user = User.objects.get(email=email)
-        compare = check_password(password,user.password)
+        compare = check_password(password, user.password)
 
-        if not compare :
+        if not compare:
             user.password = make_password(password)
             user.password_changed = True
-            user.save(update_fields=['password','password_changed'])
+            user.save(update_fields=["password", "password_changed"])
             return Response(
                 {"success": True, "info": "passwords updated successfully"},
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_201_CREATED,
             )
-        
+
         else:
             return Response(
-                {"success": False, "info": "old password cannot be the same as new password"},
+                {
+                    "success": False,
+                    "info": "old password cannot be the same as new password",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-   
 
-        
     @action(
-        detail=False,methods=["post"],permission_classes=[permissions.AllowAny],url_path='forgot-password'
+        detail=False,
+        methods=["post"],
+        permission_classes=[permissions.AllowAny],
+        url_path="forgot-password",
     )
-    def forgot_password(self,request,pk=None):
+    def forgot_password(self, request, pk=None):
         data = request.data
         email = data.get("email")
         if not email:
@@ -258,16 +266,18 @@ class UserViewset(viewsets.ModelViewSet):
                 {"success": False, "info": "email is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         auth.send_otp(email=email)
 
-        return Response({'success':True,"info":"otp sent successfully"})
+        return Response({"success": True, "info": "otp sent successfully"})
 
     @action(
-        detail=False,methods=["post"],permission_classes=[permissions.AllowAny],url_path='verify-otp'
+        detail=False,
+        methods=["post"],
+        permission_classes=[permissions.AllowAny],
+        url_path="verify-otp",
     )
-
-    def verify_otp(self,request,pk=None):
+    def verify_otp(self, request, pk=None):
         data = request.data
         email = data.get("email")
         otp = data.get("otp")
@@ -276,22 +286,24 @@ class UserViewset(viewsets.ModelViewSet):
                 {"success": False, "info": "email is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         if not otp:
             return Response(
                 {"success": False, "info": "otp is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         verify = auth.forgot_verify_otp(email=email, user_entered_otp=otp)
 
         return verify
-    
-    @action(
-        detail=False,methods=["post"],permission_classes=[permissions.AllowAny],url_path='login'
-    )
 
-    def login(self,request,pk=None):
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[permissions.AllowAny],
+        url_path="login",
+    )
+    def login(self, request, pk=None):
         data = request.data
         email = data.get("email")
         password = data.get("password")
@@ -300,13 +312,13 @@ class UserViewset(viewsets.ModelViewSet):
                 {"success": False, "info": "email is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         if not password:
             return Response(
                 {"success": False, "info": "password is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         user = User.objects.filter(email=email).first()
 
         if not user:
@@ -314,52 +326,43 @@ class UserViewset(viewsets.ModelViewSet):
                 {"success": False, "info": "User does not exist"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         now = arrow.now().datetime
         if not user.password_changed and user.password_expiry <= now:
-            return Response({
-                "success": False, "info": "password expired. Contact your administrator"
-            })
+            return Response(
+                {
+                    "success": False,
+                    "info": "password expired. Contact your administrator",
+                }
+            )
 
-        
         if not user.login_enabled:
             return Response(
                 {"success": False, "info": "User login is disabled"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         checker = check_password(password, user.password)
         if checker:
             token = auth.generate_token(email)
             if user.password_changed:
-                return Response({
-                    "success": True,
-                    "info": "User logged in successfully",
-                    "token": token
+                return Response(
+                    {
+                        "success": True,
+                        "info": "User logged in successfully",
+                        "token": token,
+                    },
+                    status=status.HTTP_200_OK,
+                )
 
-                },status=status.HTTP_200_OK)
-            
             else:
-                return Response({
-                    "success": True,
-                    "info": "User logged in successfully, please change your password",
-                    "token": token,
+                return Response(
+                    {
+                        "success": True,
+                        "info": "User logged in successfully, please change your password",
+                        "token": token,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-                },status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({
-            "success" : False,
-            "info" : "Invalid credentials"
-        })
-    
-
-        
-
-    
-
-    
-
-        
-
-
-
+        return Response({"success": False, "info": "Invalid credentials"})

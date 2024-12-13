@@ -27,7 +27,7 @@ class Role(models.Model):
 class Department(models.Model):
     STAT = (("active", "Active"), ("inActive", "InActive"))
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    department_code = models.CharField(max_length=255,null=True,blank=True)
+    department_code = models.CharField(max_length=255, null=True, blank=True)
     name = models.CharField(
         max_length=255,
     )
@@ -38,7 +38,6 @@ class Department(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
     class Meta:
         verbose_name = "Department"
         verbose_name_plural = "Departments"
@@ -46,24 +45,26 @@ class Department(models.Model):
 
     def __str__(self) -> str:
         return self.name
-    
-    def save(self,*args,**kwargs):
-        if not self.department_code:
-            self.department_code = 'ISE'+ '-' + uuid.uuid4().hex[:6]
 
-        return super().save(*args,**kwargs)
+    def save(self, *args, **kwargs):
+        if not self.department_code:
+            self.department_code = "ISE" + "-" + uuid.uuid4().hex[:6]
+
+        return super().save(*args, **kwargs)
 
 
 class User(AbstractUser):
     # first_name, last_name, username, email already exist in AbstractUser
-    username = models.CharField(max_length=255, unique=True,null=True,blank=True)
+    username = models.CharField(max_length=255, unique=True, null=True, blank=True)
     employee_no = models.CharField(max_length=300, unique=True)
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     password = models.CharField(max_length=255, null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=255, null=True, blank=True)
     phone = models.CharField(max_length=255, unique=True)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE,null=True, blank=True)
+    department = models.ForeignKey(
+        Department, on_delete=models.CASCADE, null=True, blank=True
+    )
     location = models.CharField(max_length=300, null=True, blank=True)
     login_enabled = models.BooleanField(default=True)
     password_changed = models.BooleanField(default=False)
@@ -89,7 +90,7 @@ class User(AbstractUser):
     def save(self, *args, **kwargs):
         if not self.username:
             self.username = self.email.split("@")[0].strip()
-        
+
         if not self.password:
             self.password = self.generate_temporal_password()
             self.password_expiry = arrow.now().shift(minutes=+3).datetime

@@ -25,19 +25,19 @@ def upload_templates(directory):
 
 
 
-# upload_templates('templates')
-from apps.assets.models import AssetStatus
+upload_templates('templates')
+# from apps.assets.models import AssetStatus
 
-def upload_asset_status():
-    status = ['pending', 'ready-to-deploy', 'deployed', 'archived', 'broken(not-fixable)', 'lost/stolen', 'out-for-diagnostics', 'out-for-repair']
+# def upload_asset_status():
+#     status = ['pending', 'ready-to-deploy', 'deployed', 'archived', 'broken(not-fixable)', 'lost/stolen', 'out-for-diagnostics', 'out-for-repair']
 
-    for stat in status:
-        AssetStatus.objects.create(name=stat)
-        print(f"{stat} created")
+#     for stat in status:
+#         AssetStatus.objects.create(name=stat)
+#         print(f"{stat} created")
 
     
 
 
-#upload_asset_status()
+# upload_asset_status()
 
 
