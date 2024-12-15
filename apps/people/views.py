@@ -351,6 +351,7 @@ class UserViewset(viewsets.ModelViewSet):
                         "success": True,
                         "info": "User logged in successfully",
                         "token": token,
+                        "password_changed": True,
                     },
                     status=status.HTTP_200_OK,
                 )
@@ -361,8 +362,9 @@ class UserViewset(viewsets.ModelViewSet):
                         "success": True,
                         "info": "User logged in successfully, please change your password",
                         "token": token,
+                        "password_changed": False,
                     },
-                    status=status.HTTP_400_BAD_REQUEST,
+                    status=status.HTTP_200_OK,
                 )
 
         return Response({"success": False, "info": "Invalid credentials"})

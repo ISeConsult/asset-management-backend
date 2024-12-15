@@ -20,8 +20,9 @@ class AssetModelCategory(models.Model):
 
 class AssetManufacturer(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(max_length=120)
     web_url = models.URLField(null=True, blank=True)
-    support_url = models.CharField(max_length=120)
+    support_url = models.CharField(max_length=120,null=True, blank=True)
     email = models.EmailField()
     phone = models.CharField(max_length=13)
     image = models.ImageField(upload_to="manufacturers/", null=True, blank=True)
@@ -41,7 +42,7 @@ class AssetModel(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
     category = models.ForeignKey(AssetModelCategory, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="assets/")
+    image = models.ImageField(upload_to="assets/",null=True,blank=True)
     manufacturer = models.ForeignKey(AssetManufacturer, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
     note = models.TextField(null=True, blank=True)
@@ -96,9 +97,25 @@ class AssetLocation(models.Model):
         return self.location_name
 
 
+class AssetCategoryTypes(models.Model):
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(max_length=120)
+    note = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Asset Category Type"
+        verbose_name_plural = "Asset Category Types"
+        ordering = ["-created_at"]
+
+
 class AssetCategory(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
+    asset_type = models.ForeignKey(
+        AssetCategoryTypes, on_delete=models.CASCADE, null=True, blank=True
+    )
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -166,12 +183,16 @@ class Asset(models.Model):
     status = models.ForeignKey(AssetStatus, on_delete=models.CASCADE)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     category = models.ForeignKey(AssetCategory, on_delete=models.CASCADE)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, null=True, blank=True
+    )
     purchase_cost = models.PositiveIntegerField(default=0)
     image = models.ImageField(upload_to="assets/", null=True, blank=True)
     order_number = models.CharField(max_length=120)
     supplier = models.ForeignKey(AssetSupplier, on_delete=models.CASCADE)
-    current_assignee = models.ForeignKey("people.User", on_delete=models.CASCADE)
+    current_assignee = models.ForeignKey(
+        "people.User", on_delete=models.CASCADE, null=True, blank=True
+    )
     purchase_date = models.DateField()
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -191,11 +212,16 @@ class AssetRequest(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, null=True, blank=True)
     request_date = models.DateField()
     user = models.ForeignKey(
-        "people.User", on_delete=models.CASCADE, null=True, blank=True
+        "people.User",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="asset_request_user",
     )
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     expected_checkin_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=120, blank=True, null=True)
+    submitted_by = models.ForeignKey("people.User", on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

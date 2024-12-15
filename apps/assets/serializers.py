@@ -1,6 +1,7 @@
 from apps.assets.models import (
     Asset,
     AssetCategory,
+    AssetCategoryTypes,
     AssetLocation,
     AssetManufacturer,
     AssetModel,
@@ -15,6 +16,12 @@ from apps.assets.models import (
 )
 from rest_framework import serializers
 from decouple import config
+
+
+class AssetCategoryTypesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetCategoryTypes
+        fields = "__all__"
 
 
 class AssetModelCatecorySerializer(serializers.ModelSerializer):
@@ -74,16 +81,35 @@ class AssetLocationSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AssetCategorySerializer(serializers.ModelSerializer):
+class AssetCategoryCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCategory
+        fields = "__all__"
+
+
+class AssetCategoryTypesListSerializer(serializers.ModelSerializer):
+
+    asset_type = serializers.SerializerMethodField()
+
+    def get_asset_type(self, obj):
+        if obj.asset_type:
+            return {
+                "id": obj.asset_type.id,
+                "uid": obj.asset_type.uid,
+                "name": obj.asset_type.name,
+            }
+        return None
+
+    class Meta:
+        model = AssetCategoryTypes
         fields = "__all__"
 
 
 class CompanyCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
-        fields = '__all__'
+        fields = "__all__"
+
 
 class CompanyListSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
@@ -140,7 +166,7 @@ class AssetListSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
     category = serializers.SerializerMethodField()
-    company = serializers.SerializerMethodField()
+    #company = serializers.SerializerMethodField()
     supplier = serializers.SerializerMethodField()
     current_assignee = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
@@ -174,7 +200,9 @@ class AssetListSerializer(serializers.ModelSerializer):
             return {
                 "id": obj.location.id,
                 "uid": obj.location.uid,
-                "location": obj.location.name,
+                "location": obj.location.location_name,
+                "city":obj.location.city,
+                "country":obj.location.country,
             }
 
         else:
@@ -288,9 +316,9 @@ class AssetReturnCreateUpdateSerializer(serializers.ModelSerializer):
 
 class AssetReturnListSerializer(serializers.ModelSerializer):
     asset = serializers.SerializerMethodField()
-    user = serializers.ModelSerializer()
-    status = serializers.ModelSerializer()
-    location = serializers.ModelSerializer()
+    user = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
 
     def get_asset(self, obj):
         if obj.asset:

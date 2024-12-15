@@ -2,6 +2,7 @@ from django.contrib import admin
 from apps.assets.models import (
     Asset,
     AssetCategory,
+    AssetCategoryTypes,
     AssetCheckIn,
     AssetMaintenanceRequest,
     AssetRequest,
@@ -25,6 +26,7 @@ class BaseAdmin(admin.ModelAdmin):
 # Model Registrations
 @admin.register(
     Asset,
+    AssetCategoryTypes,
     AssetCategory,
     AssetCheckIn,
     AssetMaintenanceRequest,
