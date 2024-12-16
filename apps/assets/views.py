@@ -845,7 +845,7 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
         )
 
         if asset.current_assignee or asset.status == "checked-out":
-            return Response({"success": False, "info": "Asset already assigned"})
+            return Response({"success": False, "info": "Asset already assigned"},status=status.HTTP_400_BAD_REQUEST)
 
         now = datetime.datetime.now().date()
         data["request_date"] = now
