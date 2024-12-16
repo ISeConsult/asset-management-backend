@@ -743,6 +743,123 @@ class AssetViewset(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
+    @action(
+    detail=False, 
+    methods=['get'], 
+    permission_classes=[TokenRequiredPermission], 
+    url_path='requestable-assets', 
+    pagination_class=FetchDataPagination
+)
+    def fetch_requestable_assets(self, request, *args, **kwargs):
+        try:
+            assets = Asset.objects.filter(status__name='checked_in')
+
+            if not assets.exists():
+                return Response(
+                    {'success': False, 'info': 'No assets found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Handle pagination
+            page = self.paginate_queryset(assets)
+            if page is not None:
+                serializer = AssetListSerializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            # If pagination is not applied
+            serializer = AssetListSerializer(assets, many=True)
+            return Response(
+                {'success': True, 'info': serializer.data},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            logger.exception("Error fetching requestable assets")
+            return Response(
+                {'success': False, 'info': 'An error occurred while processing your request'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        
+
+    @action(
+    detail=False, 
+    methods=['get'], 
+    permission_classes=[TokenRequiredPermission], 
+    url_path='requested-assets', 
+    pagination_class=FetchDataPagination
+    )
+    def fetch_requested_assets(self, request, *args, **kwargs):
+        try:
+            assets = AssetRequest.objects.all()
+
+            if not assets.exists():
+                return Response(
+                    {'success': False, 'info': 'No assets found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Handle pagination
+            page = self.paginate_queryset(assets)
+            if page is not None:
+                serializer = AssetRequestListSerializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            # If pagination is not applied
+            serializer = AssetRequestListSerializer(assets, many=True)
+            return Response(
+                {'success': True, 'info': serializer.data},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            logger.exception("Error fetching requested assets")
+            return Response(
+                {'success': False, 'info': 'An error occurred while processing your request'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        
+
+    @action(
+    detail=False, 
+    methods=['get'], 
+    permission_classes=[TokenRequiredPermission], 
+    url_path='issued-assets', 
+    pagination_class=FetchDataPagination
+    )
+    def fetched_checked_out_assets(self, request, *args, **kwargs):
+        try:
+            assets = Asset.objects.filter(status__name='checked_out')
+
+            if not assets.exists():
+                return Response(
+                    {'success': False, 'info': 'No assets found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            page = self.paginate_queryset(assets)
+            if page is not None:
+                serializer = AssetListSerializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            serializer = AssetListSerializer(assets, many=True)
+            return Response(
+                {'success': True, 'info': serializer.data},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            logger.exception("Error fetching issued assets")
+            return Response(
+                {'success': False, 'info': 'An error occurred while processing your request'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    
+
+    
+
     # @action(
     #     detail=True,
     #     methods=["get"],
