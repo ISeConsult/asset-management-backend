@@ -13,6 +13,7 @@ from apps.assets.models import (
     AssetSupplier,
     AssetStatus,
     Company,
+    AssetCheckOut,
 )
 from rest_framework import serializers
 from decouple import config
@@ -241,6 +242,28 @@ class AssetRequestCreateUpdateSerializer(serializers.ModelSerializer):
 class AssetRequestListSerializer(serializers.ModelSerializer):
     location = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    asset = serializers.SerializerMethodField()
+    submitted_by = serializers.SerializerMethodField()
+
+    def get_asset(self, obj):
+        if obj.asset:
+            return {
+                "id": obj.asset.id,
+                "uid": obj.asset.uid,
+                "name": obj.asset.name,
+            }
+        else:
+            return None
+        
+    def get_submitted_by(self, obj):
+        if obj.submitted_by:
+            return {
+                "id": obj.submitted_by.id,
+                "uid": obj.submitted_by.uid,
+                "full_name": f"{obj.submitted_by.first_name} {obj.submitted_by.last_name}",
+            }
+        else:
+            return None
 
     def get_user(self, obj):
         if obj.user:
@@ -257,7 +280,9 @@ class AssetRequestListSerializer(serializers.ModelSerializer):
             return {
                 "id": obj.location.id,
                 "uid": obj.location.uid,
-                "location": obj.location.name,
+                "location": obj.location.location_name,
+                "city":obj.location.city,
+                "country":obj.location.country,
             }
 
         else:
@@ -275,13 +300,28 @@ class AssetCheckInCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class AssetCheckInListSerializer(serializers.ModelSerializer):
-    asset_request = serializers.SerializerMethodField()
+    asset = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
 
-    def get_asset_request(self, obj):
-        if obj.asset_request:
-            return AssetRequestListSerializer(obj.asset_request).data
+    def get_user(self, obj):
+        if obj.user:
+            return {
+                "id": obj.user.id,
+                "uid": obj.user.uid,
+                "full_name": f"{obj.user.first_name} {obj.user.last_name}",
+            }
+        else:
+            return None
+
+    def get_asset(self, obj):
+        if obj.asset:
+            return {
+                "id": obj.asset.id,
+                "uid": obj.asset.uid,
+                "name": obj.asset.name,
+            }
         else:
             return None
 
@@ -290,7 +330,7 @@ class AssetCheckInListSerializer(serializers.ModelSerializer):
             return {
                 "id": obj.location.id,
                 "uid": obj.location.uid,
-                "location": obj.location.name,
+                "location": obj.location.location_name,
             }
 
         else:
@@ -305,6 +345,47 @@ class AssetCheckInListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AssetCheckIn
+        fields = "__all__"
+
+
+class AssetCheckOutCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetCheckOut
+        fields = "__all__"
+
+
+class AssetCheckoutListSerializer(serializers.ModelSerializer):
+    asset_request = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    checkout_by = serializers.SerializerMethodField()
+
+    def get_asset_request(self, obj):
+        if obj.asset_request:
+            return AssetRequestListSerializer(obj.asset_request).data
+        else:
+            return None
+
+    def get_user(self, obj):
+        if obj.user:
+            return {
+                "id": obj.user.id,
+                "uid": obj.user.uid,
+                "full_name": f"{obj.user.first_name} {obj.user.last_name}",
+            }
+        else:
+            return None
+
+    def get_checkout_by(self, obj):
+        if obj.checkout_by:
+            return {
+                "id": obj.checkout_by.id,
+                "uid": obj.checkout_by.uid,
+                "full_name": f"{obj.checkout_by.first_name} {obj.checkout_by.last_name}",
+            }
+        else:
+            return None
+    class Meta:
+        model = AssetCheckOut
         fields = "__all__"
 
 

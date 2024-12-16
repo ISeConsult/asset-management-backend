@@ -12,6 +12,7 @@ from apps.people.permissions import TokenRequiredPermission, AdminCheckPermissio
 from apps.assets.models import (
     Asset,
     AssetCategoryTypes,
+    AssetCheckOut,
     AssetModelCategory,
     AssetManufacturer,
     AssetCategory,
@@ -25,6 +26,7 @@ from apps.assets.models import (
     AssetLocation,
     Company,
     AssetCheckIn,
+    AssetCheckOut,
 )
 from apps.assets.serializers import (
     AssetCategoryCreateUpdateSerializer,
@@ -42,6 +44,8 @@ from apps.assets.serializers import (
     CompanyCreateUpdateSerializer,
     AssetCheckInCreateUpdateSerializer,
     AssetCheckInListSerializer,
+    AssetCheckoutListSerializer,
+    AssetCheckOutCreateUpdateSerializer,
     AssetCreateUpdateSerializer,
     AssetListSerializer,
     AssetRequestCreateUpdateSerializer,
@@ -778,6 +782,7 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
     queryset = AssetRequest.objects.all()
     permission_classes = [TokenRequiredPermission]
     lookup_field = "uid"
+    pagination_class = FetchDataPagination
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -786,6 +791,11 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(
             {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
@@ -804,6 +814,7 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
             "user",
             "asset",
             "note",
+            "location",
         ]
 
         for field in required_fields:
@@ -826,15 +837,21 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
                 {"success": False, "info": "User does not exist"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        
+        if not AssetLocation.objects.filter(id=data.get("location")).exists():
+            return Response(
+                {"success": False, "info": "Asset location does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+        )
 
         if asset.current_assignee or asset.status == "checked-out":
             return Response({"success": False, "info": "Asset already assigned"})
 
-        # now = datetime.datetime.now().date()
-        # data["request_date"] = now
-        # print(now)
+        now = datetime.datetime.now().date()
+        data["request_date"] = now
+        print(now)
 
-        data["submitted_by"] = request.user
+        data["submitted_by"] = request.user.id
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -844,85 +861,7 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    @action(
-        detail=False,
-        methods=["post"],
-        permission_classes=[TokenRequiredPermission, AdminCheckPermission],
-        url_path="asset-request-approval",
-    )
-    def asset_request_approval(self, request, *args, **kwargs):
-        asset_request_id = request.data.get("asset_request")
-        if not asset_request_id:
-            return Response(
-                {"success": False, "info": "Asset Request UID not provided"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        request_status = request.data.get("status")
-
-        if not request_status:
-            return Response(
-                {"success": False, "info": "Status not provided"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if request_status not in ["approved", "rejected"]:
-            return Response(
-                {"success": False, "info": "Invalid status provided"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        asset_request = get_object_or_404(AssetRequest, id=asset_request_id)
-
-        if request_status == "approved":
-            try:
-                with transaction.atomic():
-                    asset = asset_request.asset
-                    asset.status = AssetStatus.objects.get(name="deployed")
-                    asset.current_assignee = asset_request.user
-                    asset.requestable = False
-                    asset.save(
-                        update_fields=["status", "current_assignee", "requestable"]
-                    )
-
-                    AssetAssignment.objects.create(
-                        asset=asset_request.asset,
-                        user=asset_request.user,
-                        approved_by=request.user,
-                    )
-
-                    asset_request.status = "approved"
-                    asset_request.approval_date = datetime.datetime.now().date()
-                    asset_request.save(update_fields=["status", "approval_date"])
-
-                return Response(
-                    {"success": True, "info": "Asset request approved successfully"},
-                    status=status.HTTP_200_OK,
-                )
-
-            except Exception as e:
-                return Response(
-                    {
-                        "success": False,
-                        "info": "Failed to approve asset request: " + str(e),
-                    },
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
-
-        elif request_status == "rejected":
-            asset_request.status = "rejected"
-            asset_request.rejection_date = datetime.datetime.now().date()
-            asset_request.save(update_fields=["status", "rejection_date"])
-            return Response(
-                {"success": True, "info": "Asset request rejected successfully"},
-                status=status.HTTP_200_OK,
-            )
-
-        else:
-            return Response(
-                {"success": False, "info": "Invalid status provided"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    
 
 
 class AssetReturnViewSet(viewsets.ModelViewSet):
@@ -1128,6 +1067,7 @@ class AssetCheckInViewset(viewsets.ModelViewSet):
     queryset = AssetCheckIn.objects.all()
     permission_classes = [TokenRequiredPermission]
     lookup_field = "uid"
+    pagination_class = FetchDataPagination
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -1136,6 +1076,11 @@ class AssetCheckInViewset(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(
             {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
@@ -1150,6 +1095,52 @@ class AssetCheckInViewset(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         data = request.data
+
+        asset = data.get("asset")
+        location = data.get("location")
+
+        if not asset:
+            return Response(
+                {"success": False, "info": "asset is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        
+        if not location:
+            return Response(
+                {"success": False, "info": "location is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        asset = Asset.objects.filter(id=asset).first()
+
+        if not asset:
+            return Response(
+                {"success": False, "info": "Asset does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        location = AssetLocation.objects.filter(id=location).first()
+
+        if not location:
+            return Response(
+                {"success": False, "info": "Asset location does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        data['checkin_date'] = arrow.now().date()
+        data['user'] = request.user.id
+
+        asset_status = AssetStatus.objects.filter(name="checked_in").first()
+        if not asset_status:
+            return Response(
+                {"success": False, "info": "Asset status does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        asset.status = asset_status
+        asset.save(update_fields=['status'])
+
         serializer = self.get_serializer(data=data)
         try:
             serializer.is_valid(raise_exception=True)
@@ -1163,3 +1154,95 @@ class AssetCheckInViewset(viewsets.ModelViewSet):
             return Response(
                 {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class AssetCheckoutViewset(viewsets.ModelViewSet):
+    queryset = AssetCheckOut.objects.all()
+    permission_classes = [TokenRequiredPermission]
+    lookup_field = "uid"
+    pagination_class = FetchDataPagination
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return AssetCheckOutCreateUpdateSerializer
+        return AssetCheckoutListSerializer
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
+        )
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(
+            {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
+        )
+    
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        asset_request = data.get("asset_request")
+        request_status = data.get('request_status')
+        
+
+        if not asset_request:
+            return Response(
+                {"success": False, "info": "asset request is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ass_request = AssetRequest.objects.filter(id=asset_request).first()
+
+        if not ass_request:
+            return Response(
+                {"success": False, "info": "Asset request does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            ) 
+        
+
+        data['checkout_by'] = request.user.id
+
+        data['user'] = ass_request.user.id
+
+        asset_status = AssetStatus.objects.get(name='checked_out')
+        if not asset_status:
+            return Response(
+                {"success": False, "info": "Asset status does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if request_status == 'approved':
+            ass_request.status = 'approved'
+            ass_request.asset.current_assignee = ass_request.user
+            ass_request.asset.status  = asset_status
+            ass_request.asset.save(update_fields=['current_assignee', 'status'])
+            ass_request.save(update_fields=['status'])
+
+        else:
+            ass_request.status = 'rejected'
+            ass_request.save(update_fields=['status'])
+
+
+        serializer = self.get_serializer(data=data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(
+                {"success": True, "info": serializer.data},
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            logger.warning(f"Error creating asset manufacturer: {str(e)}")
+            return Response(
+                {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+    
+
+    

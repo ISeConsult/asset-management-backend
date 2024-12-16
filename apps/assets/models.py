@@ -205,6 +205,9 @@ class Asset(models.Model):
 
     def __str__(self) -> str:
         return self.name
+    
+   
+        
 
 
 class AssetRequest(models.Model):
@@ -240,9 +243,9 @@ class AssetCheckIn(models.Model):
     user = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, null=True, blank=True
     )
-    asset_request = models.ForeignKey(AssetRequest, on_delete=models.CASCADE)
-    name = models.CharField(max_length=120)
-    status = models.ForeignKey(AssetStatus, on_delete=models.CASCADE)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    name = models.CharField(max_length=120,null=True, blank=True)
+    status = models.ForeignKey(AssetStatus, on_delete=models.CASCADE,null=True, blank=True)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     checkin_date = models.DateField()
     note = models.TextField(null=True, blank=True)
@@ -257,12 +260,28 @@ class AssetCheckIn(models.Model):
     def __str__(self):
         return self.name
 
-    def save(self, *args, **kwargs):
-        if self.status.name == "deployed":
-            self.asset_request.status = self.status.name
-            self.asset_request.expected_checkin_date = self.checkin_date
-        return super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if self.status.name == "checked_in":
+    #         self.asset.status = self.status.name
+    #     return super().save(*args, **kwargs)
+    
 
+class AssetCheckOut(models.Model):
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    asset_request = models.ForeignKey(AssetRequest, on_delete=models.CASCADE)
+    user = models.ForeignKey("people.User", on_delete=models.CASCADE,related_name='asset_checkout_user')
+    checkout_by = models.ForeignKey("people.User", on_delete=models.CASCADE,related_name='asset_checkout_checkout_by')
+    note = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Asset CheckOut'
+        verbose_name_plural = 'Asset CheckOuts'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.asset_request.asset.name
 
 class AssetReturn(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

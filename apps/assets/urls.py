@@ -14,6 +14,8 @@ from apps.assets.views import (
     MaintenanceRequestViewSet,
     AssetSupplierViewSet,
     AssetCategoryTypesViewset,
+    AssetCheckInViewset,
+    AssetCheckoutViewset,
 )
 
 from rest_framework.routers import DefaultRouter
@@ -36,6 +38,8 @@ router.register(
 router.register(r"asset-status", AssetStatusViewSet, "asset-status")
 router.register(r"assets", AssetViewset, basename="assets")
 router.register(r"asset-request", AssetRequestViewSet, "asset-request")
+router.register(r"asset-check-in", AssetCheckInViewset, basename="asset-check-in")
+router.register(r"asset-check-out", AssetCheckoutViewset, basename="asset-check-out")
 router.register(r"asset-return", AssetReturnViewSet, basename="asset-return")
 router.register(
     r"maitenance-request", MaintenanceRequestViewSet, basename="maintenance-request"
