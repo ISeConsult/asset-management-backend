@@ -11,7 +11,7 @@ class LicenseCategoryTypes(models.Model):
 
     class Meta:
         verbose_name = 'License Category Type'
-        verbose_nameS = 'License Category Types'
+        verbose_name_plural = 'License Category Types'
         ordering = ['-created_at']
 
     def __str__(self):

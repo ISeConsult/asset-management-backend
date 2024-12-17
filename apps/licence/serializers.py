@@ -10,13 +10,13 @@ from apps.licence.models import (
 
 class LicenseCategoryTypesSerializer(serializers.ModelSerializer):
     class Meta:
-        models = LicenseCategoryTypes
+        model = LicenseCategoryTypes
         fields = '__all__'
 
 
 class LicenseCategoryCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
-        models = LicenseCategory
+        model = LicenseCategory
         fields = '__all__'
 
 
@@ -35,14 +35,14 @@ class LicenseCategoryListSerializer(serializers.ModelSerializer):
             return None
 
     class Meta:
-        models = LicenseCategory
+        model = LicenseCategory
         fields = '__all__'
 
 
 
 class LicenseCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
-        models = License
+        model = License
         fields = "__all__"
 
 
@@ -77,14 +77,14 @@ class LicenseListSerializer(serializers.ModelSerializer):
 
 
     class Meta:
-        models = License
+        model = License
         fields = "__all__" 
 
 
 
 class LicenseCheckOutCreateUpdateSerializer(serializers.ModelSerializer):
    class Meta:
-        models = LicenseCheckOut
+        model = LicenseCheckOut
         fields = '__all__'
 
 
@@ -121,5 +121,5 @@ class LicenseCheckOutListSerializer(serializers.ModelSerializer):
 
 
     class Meta:
-        models = LicenseCheckOut
+        model = LicenseCheckOut
         fields = '__all__'
