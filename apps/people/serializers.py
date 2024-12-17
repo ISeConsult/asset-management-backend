@@ -4,6 +4,7 @@ from apps.assets.models import (
     AssetMaintenanceRequest,
     Asset,
 )
+from apps.licence.models import License
 from apps.people.models import Department, Role, User
 from rest_framework import serializers
 
@@ -51,13 +52,36 @@ class UserListSerializer(serializers.ModelSerializer):
     assigned_assets = serializers.SerializerMethodField()
     asset_requests = serializers.SerializerMethodField()
     maintenance_requests = serializers.SerializerMethodField()
-    # current_assets = serializers.SerializerMethodField()
+    assets = serializers.SerializerMethodField()
+    licenses = serializers.SerializerMethodField()
+    consumables = serializers.SerializerMethodField()
+    accessories = serializers.SerializerMethodField()
 
-    # def get_current_assets(self, obj):
-    #     assets = Asset.objects.filter(user=obj)
-    #     if assets:
-    #         return assets.count()
-    #     return 0
+    def get_assets(self, obj):
+        assets = Asset.objects.filter(current_assignee=obj)
+        if assets:
+            return assets.count()
+        return 0
+    
+    def get_licenses(self,obj):
+        licenses = License.objects.filter(licensed_to=obj)
+        if licenses:
+            return licenses.count()
+        return 0
+        
+    def get_consumables(self,obj):
+        consumable = Asset.objects.filter(current_assignee=obj,category__asset_type__name='consumables')
+        if consumable:
+            return consumable.count()
+        return 0
+    
+    def get_accessories(self,obj):
+        accessory = Asset.objects.filter(current_assignee=obj,category__asset_type__name='accessories')
+        if accessory:
+            return accessory.count()
+        return 0
+
+    
 
     def get_assigned_assets(self, obj):
         # Get all asset assignments for the user
@@ -74,7 +98,7 @@ class UserListSerializer(serializers.ModelSerializer):
                     {
                         "asset_uid": asset.uid,
                         "asset_name": asset.name,
-                        "model": asset.model,
+                        "model": asset.asset_model.name,
                         "serial_no": asset.serial_no,
                     }
                 )
@@ -99,7 +123,7 @@ class UserListSerializer(serializers.ModelSerializer):
                     {
                         "asset_uid": asset.uid,
                         "asset_name": asset.name,
-                        "model": asset.model,
+                        "model": asset.asset_model.name,
                         "request_date": assignment.request_date,
                     }
                 )
