@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # django apps
     "apps.people",
     "apps.assets",
+    "apps.license",
     # third party apps
     "rest_framework",
     "corsheaders",

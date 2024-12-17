@@ -555,7 +555,7 @@ class AssetModelCategoryViewset(viewsets.ModelViewSet):
 class AssetStatusViewSet(viewsets.ModelViewSet):
     queryset = AssetStatus.objects.all()
     serializer_class = AssetStatusSerializer
-    permission_classes = [TokenRequiredPermission, AdminCheckPermission]
+    permission_classes = [TokenRequiredPermission]
     lookup_field = "uid"
 
     def list(self, request, *args, **kwargs):
@@ -602,7 +602,7 @@ class AssetStatusViewSet(viewsets.ModelViewSet):
 
 class AssetViewset(viewsets.ModelViewSet):
     queryset = Asset.objects.all()
-    permission_classes = [TokenRequiredPermission, AdminCheckPermission]
+    permission_classes = [TokenRequiredPermission]
     lookup_field = "uid"
     pagination_class = FetchDataPagination
 
@@ -961,7 +961,7 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
         )
 
-        if asset.current_assignee or asset.status == "checked-out":
+        if asset.current_assignee or asset.status.name == "checked_out":
             return Response({"success": False, "info": "Asset already assigned"},status=status.HTTP_400_BAD_REQUEST)
 
         now = datetime.datetime.now().date()
@@ -1007,7 +1007,7 @@ class AssetReturnViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        required_fields = ["asset"]
+        required_fields = ["asset","location"]
 
         for field in required_fields:
             if not data.get(field):
@@ -1026,6 +1026,7 @@ class AssetReturnViewSet(viewsets.ModelViewSet):
 
         user_id = request.user.id
         data["user"] = user_id
+        data["return_date"] = arrow.now().date()
         user = User.objects.filter(id=user_id)
 
         if not user:
@@ -1112,7 +1113,7 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
 
 class AssetSupplierViewSet(viewsets.ModelViewSet):
     queryset = AssetSupplier.objects.all()
-    permission_classes = [TokenRequiredPermission, AdminCheckPermission]
+    permission_classes = [TokenRequiredPermission]
     lookup_field = "uid"
 
     def get_serializer_class(self):

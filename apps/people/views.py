@@ -27,7 +27,7 @@ auth = Authenticator()
 class RoleViewset(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    permission_classes = [AdminCheckPermission]
+    #permission_classes = [AdminCheckPermission]
     lookup_field = "uid"
 
     def list(self, request, *args, **kwargs):
@@ -75,7 +75,7 @@ class RoleViewset(viewsets.ModelViewSet):
 
 class DepartmentViewset(viewsets.ModelViewSet):
     queryset = Department.objects.all()
-    permission_classes = [AdminCheckPermission]
+    #permission_classes = [AdminCheckPermission]
     lookup_field = "uid"
     filter_backends = [filters.SearchFilter]
 
@@ -130,7 +130,7 @@ class DepartmentViewset(viewsets.ModelViewSet):
 
 class UserViewset(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    permission_classes = [permissions.AllowAny]
+    # permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter]
     lookup_field = "uid"
 
