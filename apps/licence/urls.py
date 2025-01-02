@@ -10,7 +10,7 @@ from apps.licence.views import (
 router = DefaultRouter()
 router.register(r"license-category-type",LicenseCategoryTypesViewset,basename='license-category-type')
 router.register(r"license-category",LicenseCategoryViewset,basename="license-category")
-router.register(r"license",LicenseViewset,'license')
+router.register(r"license",LicenseViewset,basename='license')
 router.register(r'license-checkout',LicenseCheckoutViewset,basename='license-checkout')
 
 

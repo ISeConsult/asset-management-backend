@@ -1070,7 +1070,7 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        required_fields = ["asset"]
+        required_fields = ["asset","location"]
 
         for field in required_fields:
             if not data.get(field):
@@ -1086,6 +1086,12 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 {"success": False, "info": "Asset does not exist"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        
+
+        loca = AssetLocation.objects.filter(id=data.get('location'))
+
+        if not loca.exists():
+            return Response({'success':False,'info':'asset location does not exist'},status=status.HTTP_400_BAD_REQUEST)
 
         user_id = request.user.id
         data["user"] = user_id
@@ -1097,11 +1103,20 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 {"success": False, "info": "User does not exist"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        
+        stat = AssetStatus.objects.get(name="in_repair")
+        if not stat:
+            return Response({'success':False,'info':'status not found'},status=status.HTTP_400_BAD_REQUEST)
 
-        # asset.status = AssetStatus.objects.get(name="out-for-repair")
-        # asset.save(update_fields=['status'])
+        asset.status = stat
+        asset.save(update_fields=['status'])
 
-        data["report_date"] = datetime.datetime.now().date()
+        data["request_date"] = datetime.datetime.now().date()
+
+        maint = AssetMaintenanceRequest.objects.filter(user=user,asset=asset).exists()
+        if maint:
+            return Response({'success':False,'info':'Maintenace already made'},status=status.HTTP_400_BAD_REQUEST)
+        
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -1109,7 +1124,37 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             {"success": True, "info": "Maintenance request added successfully"},
             status=status.HTTP_201_CREATED,
         )
+    
+    @action(detail=False,methods=['post'],permission_classes=[TokenRequiredPermission],url_path='maintenance-return')
+    def return_from_maintenance(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            m_request = data.get('maintenace')
 
+            if not m_request:
+                return Response({'success':False,'info':'maintenance request not found'},status=status.HTTP_400_BAD_REQUEST)
+            
+            maintenance_request = AssetMaintenanceRequest.objects.filter(id=m_request,status='pending').first()
+
+            if not maintenance_request:
+                return Response({'success':False,'info':'maintenace request not found'},status=status.HTTP_404_NOT_FOUND)
+            
+            stat = AssetStatus.objects.filter(name='checked_in').first()
+            if not stat:
+                return Response({'success':False,'info':'Status not found'},status=status.HTTP_404_NOT_FOUND)
+            
+            maintenance_request.asset.status = stat
+            maintenance_request.asset.save(update_fields=['status'])
+
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            return Response({'success':True,'info':'Maintenace request updated sucessfully'},status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.warning(str(e))
+            return Response({'success':False,'info':'An error occured whilst processing your request'},status=status.HTTP_400_BAD_REQUEST)
+    
 
 class AssetSupplierViewSet(viewsets.ModelViewSet):
     queryset = AssetSupplier.objects.all()

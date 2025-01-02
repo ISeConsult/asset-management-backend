@@ -308,6 +308,7 @@ class AssetMaintenanceRequest(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     user = models.ForeignKey("people.User", on_delete=models.CASCADE)
     request_date = models.DateField()
+    status = models.CharField(max_length=120,default='pending')
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
