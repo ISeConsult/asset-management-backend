@@ -266,6 +266,13 @@ class UserViewset(viewsets.ModelViewSet):
                 {"success": False, "info": "email is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        
+        mail = User.objects.filter(email=email).first()
+        if not mail:
+            return Response(
+                {"success": False, "info": "User does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         auth.send_otp(email=email)
 
