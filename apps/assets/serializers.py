@@ -47,6 +47,7 @@ class AssetModelListSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     manufacturer = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    total_assets = serializers.SerializerMethodField()
 
     def get_category(self, obj):
         return (
@@ -62,8 +63,16 @@ class AssetModelListSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         if obj.image:
-            return {"url": config("BASE_URL") + obj.image.url}
+            return config("BASE_URL") + obj.image.url
         return None
+    
+    def get_total_assets(self,obj):
+        asset = Asset.objects.filter(asset_model=obj)
+        if asset.exists():
+            return asset.count()
+        return 0
+
+        
 
     class Meta:
         model = AssetModel
@@ -129,7 +138,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         if obj.image:
-            return {"url": config("BASE_URL") + obj.image.url}
+            return config("BASE_URL") + obj.image.url
         return None
 
     class Meta:
@@ -148,7 +157,7 @@ class AssetSupplierListSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         if obj.image:
-            return {"url": config("BASE_URL") + obj.image.url}
+            return config("BASE_URL") + obj.image.url
         return None
 
     class Meta:
@@ -218,7 +227,7 @@ class AssetListSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         if obj.image:
-            return {"url": config("BASE_URL") + obj.image.url}
+            return config("BASE_URL") + obj.image.url
         return None
 
     def get_category(self, obj):

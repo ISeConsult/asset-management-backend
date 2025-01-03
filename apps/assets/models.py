@@ -41,6 +41,8 @@ class AssetManufacturer(models.Model):
 class AssetModel(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
+    model_no = models.CharField(max_length=120)
+    fieldset = models.TextField(null=True, blank=True)
     category = models.ForeignKey(AssetModelCategory, on_delete=models.CASCADE)
     image = models.ImageField(upload_to="assets/",null=True,blank=True)
     manufacturer = models.ForeignKey(AssetManufacturer, on_delete=models.CASCADE)
@@ -116,6 +118,7 @@ class AssetCategory(models.Model):
     asset_type = models.ForeignKey(
         AssetCategoryTypes, on_delete=models.CASCADE, null=True, blank=True
     )
+    quantity = models.PositiveIntegerField(default=0)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
