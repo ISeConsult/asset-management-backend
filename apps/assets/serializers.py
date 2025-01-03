@@ -18,6 +18,8 @@ from apps.assets.models import (
 from rest_framework import serializers
 from decouple import config
 
+from apps.licence.models import License
+
 
 class AssetCategoryTypesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,6 +34,39 @@ class AssetModelCatecorySerializer(serializers.ModelSerializer):
 
 
 class AssetManufacturerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetManufacturer
+        fields = "__all__"
+
+
+class AssetManufacturerListSerializer(serializers.ModelSerializer):
+    assets = serializers.SerializerMethodField()
+    consumables = serializers.SerializerMethodField()
+    accessories = serializers.SerializerMethodField()
+
+    def get_assets(self, obj):
+        assets = Asset.objects.filter(manufacturer=obj)
+        if assets:
+            return assets.count()
+        return 0
+    
+    # def get_licenses(self,obj):
+    #     licenses = License.objects.filter(licensed_to=obj)
+    #     if licenses:
+    #         return licenses.count()
+    #     return 0
+        
+    def get_consumables(self,obj):
+        consumable = Asset.objects.filter(manufacturer=obj,category__asset_type__name='consumables')
+        if consumable:
+            return consumable.count()
+        return 0
+    
+    def get_accessories(self,obj):
+        accessory = Asset.objects.filter(manufacturer=obj,category__asset_type__name='accessories')
+        if accessory:
+            return accessory.count()
+        return 0
     class Meta:
         model = AssetManufacturer
         fields = "__all__"

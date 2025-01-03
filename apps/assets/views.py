@@ -38,6 +38,7 @@ from apps.assets.serializers import (
     AssetSupplierListSerializer,
     AssetModelCatecorySerializer,
     AssetManufacturerSerializer,
+    AssetManufacturerListSerializer,
     AssetModelCreateUpdateSerializer,
     AssetModelListSerializer,
     AssetLocationSerializer,
@@ -184,9 +185,13 @@ class AssetCategoryViewSet(viewsets.ModelViewSet):
 class AssetManufacturerViewset(viewsets.ModelViewSet):
     queryset = AssetManufacturer.objects.all()
     permission_classes = [TokenRequiredPermission]
-    serializer_class = AssetManufacturerSerializer
     pagination_class = FetchDataPagination
 
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return AssetManufacturerSerializer
+        return AssetManufacturerListSerializer
+    
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)

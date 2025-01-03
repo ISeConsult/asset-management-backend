@@ -193,6 +193,7 @@ class Asset(models.Model):
     image = models.ImageField(upload_to="assets/", null=True, blank=True)
     order_number = models.CharField(max_length=120)
     supplier = models.ForeignKey(AssetSupplier, on_delete=models.CASCADE)
+    manufacturer = models.ForeignKey(AssetManufacturer, on_delete=models.CASCADE, null=True, blank=True)
     current_assignee = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, null=True, blank=True
     )
