@@ -759,11 +759,11 @@ class AssetViewset(viewsets.ModelViewSet):
         try:
             assets = Asset.objects.filter(status__name='checked_in')
 
-            if not assets.exists():
-                return Response(
-                    {'success': False, 'info': 'No assets found'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+            # if not assets.exists():
+            #     return Response(
+            #         {'success': False, 'info': 'No assets found'},
+            #         status=status.HTTP_404_NOT_FOUND
+            #     )
 
             # Handle pagination
             page = self.paginate_queryset(assets)
@@ -798,11 +798,11 @@ class AssetViewset(viewsets.ModelViewSet):
         try:
             assets = AssetRequest.objects.all()
 
-            if not assets.exists():
-                return Response(
-                    {'success': False, 'info': 'No assets found'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+            # if not assets.exists():
+            #     return Response(
+            #         {'success': False, 'info': 'No assets found'},
+            #         status=status.HTTP_404_NOT_FOUND
+            #     )
 
             # Handle pagination
             page = self.paginate_queryset(assets)
@@ -837,11 +837,11 @@ class AssetViewset(viewsets.ModelViewSet):
         try:
             assets = Asset.objects.filter(status__name='checked_out')
 
-            if not assets.exists():
-                return Response(
-                    {'success': False, 'info': 'No assets found'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+            # if not assets.exists():
+            #     return Response(
+            #         {'success': False, 'info': 'No assets found'},
+            #         status=status.HTTP_404_NOT_FOUND
+            #     )
 
             page = self.paginate_queryset(assets)
             if page is not None:
