@@ -126,6 +126,40 @@ class AssetLocationSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class AssetLocationListSerializer(serializers.ModelSerializer):
+    assets = serializers.SerializerMethodField()
+    licenses = serializers.SerializerMethodField()
+    consumables = serializers.SerializerMethodField()
+    accessories = serializers.SerializerMethodField()
+
+    def get_assets(self, obj):
+        assets = Asset.objects.filter(location=obj)
+        if assets:
+            return assets.count()
+        return 0
+    
+    def get_licenses(self,obj):
+        licenses = License.objects.filter(licensed_to=obj)
+        if licenses:
+            return licenses.count()
+        return 0
+        
+    def get_consumables(self,obj):
+        consumable = Asset.objects.filter(location=obj,category__asset_type__name='consumables')
+        if consumable:
+            return consumable.count()
+        return 0
+    
+    def get_accessories(self,obj):
+        accessory = Asset.objects.filter(location=obj,category__asset_type__name='accessories')
+        if accessory:
+            return accessory.count()
+        return 0
+    class Meta:
+        model = AssetLocation
+        fields = "__all__"
+
+
 class AssetCategoryCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCategory
@@ -160,12 +194,41 @@ class CompanyListSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
 
+    assets = serializers.SerializerMethodField()
+    licenses = serializers.SerializerMethodField()
+    consumables = serializers.SerializerMethodField()
+    accessories = serializers.SerializerMethodField()
+
+    def get_assets(self, obj):
+        assets = Asset.objects.filter(company=obj)
+        if assets:
+            return assets.count()
+        return 0
+    
+    def get_licenses(self,obj):
+        licenses = License.objects.filter(company=obj)
+        if licenses:
+            return licenses.count()
+        return 0
+        
+    def get_consumables(self,obj):
+        consumable = Asset.objects.filter(company=obj,category__asset_type__name='consumables')
+        if consumable:
+            return consumable.count()
+        return 0
+    
+    def get_accessories(self,obj):
+        accessory = Asset.objects.filter(company=obj,category__asset_type__name='accessories')
+        if accessory:
+            return accessory.count()
+        return 0
+
     def get_location(self, obj):
         if obj.location:
             return {
                 "id": obj.location.id,
                 "uid": obj.location.uid,
-                "location": obj.location.name,
+                "location": obj.location.location_name,
             }
 
         else:
@@ -466,7 +529,7 @@ class AssetReturnListSerializer(serializers.ModelSerializer):
             return {
                 "id": obj.location.id,
                 "uid": obj.location.uid,
-                "location": obj.location.name,
+                "location": obj.location.location_name,
             }
 
         else:
@@ -516,7 +579,7 @@ class AssetMaintenanceRequestListSerializer(serializers.ModelSerializer):
             return {
                 "id": obj.location.id,
                 "uid": obj.location.uid,
-                "location": obj.location.name,
+                "location": obj.location.location_name,
             }
 
         else:

@@ -40,7 +40,7 @@ class License(models.Model):
     product_key = models.CharField(max_length=200)
     depriciation = models.CharField(max_length=120,null=True,blank=True)
     category = models.ForeignKey(LicenseCategory,on_delete=models.CASCADE)
-    company = models.CharField(max_length=120,null=True,blank=True)
+    company = models.ForeignKey("assets.Company",on_delete=models.CASCADE,null=True,blank=True)
     manufacturer = models.ForeignKey("assets.AssetManufacturer",on_delete=models.CASCADE)
     order_number = models.CharField(max_length=120)
     licensed_to_email = models.EmailField(null=True,blank=True)

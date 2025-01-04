@@ -1144,7 +1144,7 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             if not maintenance_request:
                 return Response({'success':False,'info':'maintenace request not found'},status=status.HTTP_404_NOT_FOUND)
             
-            stat = AssetStatus.objects.filter(name='checked_in').first()
+            stat = AssetStatus.objects.filter(name='checked_out').first()
             if not stat:
                 return Response({'success':False,'info':'Status not found'},status=status.HTTP_404_NOT_FOUND)
             
