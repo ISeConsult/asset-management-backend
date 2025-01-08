@@ -39,10 +39,17 @@ class AssetManufacturerSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+
+
 class AssetManufacturerListSerializer(serializers.ModelSerializer):
     assets = serializers.SerializerMethodField()
     consumables = serializers.SerializerMethodField()
     accessories = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+
+    def get_image(self,obj):
+        if obj.image:
+            return config('BASE_URL') + obj.image.url
 
     def get_assets(self, obj):
         assets = Asset.objects.filter(manufacturer=obj)
@@ -93,7 +100,7 @@ class AssetModelListSerializer(serializers.ModelSerializer):
 
     def get_manufacturer(self, obj):
         if obj.manufacturer:
-            return AssetManufacturerSerializer(obj.manufacturer).data
+            return AssetManufacturerListSerializer(obj.manufacturer).data
         return None
 
     def get_image(self, obj):
@@ -252,6 +259,35 @@ class AssetSupplierCreateUpdateSerializer(serializers.ModelSerializer):
 
 class AssetSupplierListSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
+    assets = serializers.SerializerMethodField()
+    # licenses = serializers.SerializerMethodField()
+    consumables = serializers.SerializerMethodField()
+    accessories = serializers.SerializerMethodField()
+    # location = serializers.SerializerMethodField()
+
+    def get_assets(self, obj):
+        assets = Asset.objects.filter(supplier=obj)
+        if assets:
+            return assets.count()
+        return 0
+    
+    # def get_licenses(self,obj):
+    #     licenses = License.objects.filter(licensed_to__department__id=obj.id)
+    #     if licenses:
+    #         return licenses.count()
+    #     return 0
+        
+    def get_consumables(self,obj):
+        consumable = Asset.objects.filter(supplier=obj,category__asset_type__name='consumables')
+        if consumable:
+            return consumable.count()
+        return 0
+    
+    def get_accessories(self,obj):
+        accessory = Asset.objects.filter(supplier=obj,category__asset_type__name='accessories')
+        if accessory:
+            return accessory.count()
+        return 0
 
     def get_image(self, obj):
         if obj.image:

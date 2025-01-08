@@ -7,6 +7,7 @@ from apps.assets.models import (
 from apps.licence.models import License
 from apps.people.models import Department, Role, User
 from rest_framework import serializers
+from decouple import config
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -25,12 +26,78 @@ class DepartmentCreateUpdateSerializer(serializers.ModelSerializer):
 
 class DepartmentListSerializer(serializers.ModelSerializer):
     total_users = serializers.SerializerMethodField()
+    manager = serializers.SerializerMethodField()
+    company = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    assets = serializers.SerializerMethodField()
+    licenses = serializers.SerializerMethodField()
+    consumables = serializers.SerializerMethodField()
+    accessories = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+
+    def get_assets(self, obj):
+        assets = Asset.objects.filter(current_assignee__department__id=obj.id)
+        if assets:
+            return assets.count()
+        return 0
+    
+    def get_licenses(self,obj):
+        licenses = License.objects.filter(licensed_to__department__id=obj.id)
+        if licenses:
+            return licenses.count()
+        return 0
+        
+    def get_consumables(self,obj):
+        consumable = Asset.objects.filter(current_assignee__department__id=obj.id,category__asset_type__name='consumables')
+        if consumable:
+            return consumable.count()
+        return 0
+    
+    def get_accessories(self,obj):
+        accessory = Asset.objects.filter(current_assignee__department__id=obj.id,category__asset_type__name='accessories')
+        if accessory:
+            return accessory.count()
+        return 0
+
 
     def get_total_users(self, obj):
         users = User.objects.filter(department=obj)
         if users:
             return users.count()
         return 0
+    
+    def get_manager(self, obj):
+        if obj.manager:
+            return {
+                "id": obj.manager.id,
+                "uid": obj.manager.uid,
+                "full_name": f"{obj.manager.first_name} {obj.manager.last_name}",
+                "email": obj.manager.email,
+            }
+
+        return None
+    
+    def get_image(self, obj):
+        if obj.image:
+            return config("BASE_URL") + obj.image.url
+    
+    def get_company(self, obj):
+        if obj.company:
+            return {
+                "id": obj.company.id,
+                "uid": obj.company.uid,
+                "name": obj.company.company_name,
+            }
+
+        return None
+    
+    def get_location(self, obj):
+        if obj.location:
+            return {
+                "id": obj.location.id,
+                "uid": obj.location.uid,
+                "name": obj.location.location_name,
+            }
 
     class Meta:
         model = Department

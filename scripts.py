@@ -5,6 +5,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "asm_backend.settings")
 django.setup()
 
 from post_office.models import EmailTemplate
+from apps.assets.models import AssetStatus
 
 def upload_templates(directory):
     for filename in os.listdir(directory):
@@ -25,19 +26,16 @@ def upload_templates(directory):
 
 
 
-upload_templates('templates')
-# from apps.assets.models import AssetStatus
+def upload_asset_status():
+    status = ['pending','in_repair','checked_in','checked_out']
 
-# def upload_asset_status():
-#     status = ['pending', 'ready-to-deploy', 'deployed', 'archived', 'broken(not-fixable)', 'lost/stolen', 'out-for-diagnostics', 'out-for-repair']
-
-#     for stat in status:
-#         AssetStatus.objects.create(name=stat)
-#         print(f"{stat} created")
+    for stat in status:
+        AssetStatus.objects.create(name=stat)
+        print(f"{stat} created")
 
     
 
 
-# upload_asset_status()
-
+upload_asset_status()
+# upload_templates('templates')
 

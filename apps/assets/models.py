@@ -41,7 +41,7 @@ class AssetManufacturer(models.Model):
 class AssetModel(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
-    model_no = models.CharField(max_length=120)
+    model_no = models.CharField(max_length=120,null=True, blank=True)
     fieldset = models.TextField(null=True, blank=True)
     category = models.ForeignKey(AssetModelCategory, on_delete=models.CASCADE)
     image = models.ImageField(upload_to="assets/",null=True,blank=True)
