@@ -732,6 +732,10 @@ class AssetViewset(viewsets.ModelViewSet):
 
         sup = AssetSupplier.objects.filter(id=supplier)
 
+        asset_status = AssetStatus.objects.filter(name='pending').first()
+
+        data['status'] = asset_status
+
         if not sup.exists():
             return Response(
                 {"success": False, "info": "asset supplier does not exist"},
