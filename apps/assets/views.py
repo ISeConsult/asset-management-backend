@@ -193,6 +193,7 @@ class AssetManufacturerViewset(viewsets.ModelViewSet):
     queryset = AssetManufacturer.objects.all()
     permission_classes = [TokenRequiredPermission]
     pagination_class = FetchDataPagination
+    lookup_field = 'uid'
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -734,7 +735,7 @@ class AssetViewset(viewsets.ModelViewSet):
 
         asset_status = AssetStatus.objects.filter(name='pending').first()
 
-        data['status'] = asset_status
+        data['status'] = asset_status.id
 
         if not sup.exists():
             return Response(
