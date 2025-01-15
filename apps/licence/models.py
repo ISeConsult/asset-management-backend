@@ -50,6 +50,7 @@ class License(models.Model):
     purchase_date = models.DateField()
     expiry_date = models.DateField(null=True,blank=True)
     note = models.TextField(null=True,blank=True)
+    location = models.ForeignKey("assets.AssetLocation",on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

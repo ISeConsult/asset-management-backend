@@ -14,6 +14,8 @@ from apps.assets.models import (
     AssetStatus,
     Company,
     AssetCheckOut,
+    Components,
+    ComponentCheckIn,
 )
 from rest_framework import serializers
 from decouple import config
@@ -39,41 +41,44 @@ class AssetManufacturerSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
-
 class AssetManufacturerListSerializer(serializers.ModelSerializer):
     assets = serializers.SerializerMethodField()
     consumables = serializers.SerializerMethodField()
     accessories = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
 
-    def get_image(self,obj):
+    def get_image(self, obj):
         if obj.image:
-            return config('BASE_URL') + obj.image.url
+            return config("BASE_URL") + obj.image.url
 
     def get_assets(self, obj):
         assets = Asset.objects.filter(manufacturer=obj)
         if assets:
             return assets.count()
         return 0
-    
+
     # def get_licenses(self,obj):
     #     licenses = License.objects.filter(licensed_to=obj)
     #     if licenses:
     #         return licenses.count()
     #     return 0
-        
-    def get_consumables(self,obj):
-        consumable = Asset.objects.filter(manufacturer=obj,category__asset_type__name='consumables')
+
+    def get_consumables(self, obj):
+        consumable = Asset.objects.filter(
+            manufacturer=obj, category__asset_type__name="consumables"
+        )
         if consumable:
             return consumable.count()
         return 0
-    
-    def get_accessories(self,obj):
-        accessory = Asset.objects.filter(manufacturer=obj,category__asset_type__name='accessories')
+
+    def get_accessories(self, obj):
+        accessory = Asset.objects.filter(
+            manufacturer=obj, category__asset_type__name="accessories"
+        )
         if accessory:
             return accessory.count()
         return 0
+
     class Meta:
         model = AssetManufacturer
         fields = "__all__"
@@ -107,14 +112,12 @@ class AssetModelListSerializer(serializers.ModelSerializer):
         if obj.image:
             return config("BASE_URL") + obj.image.url
         return None
-    
-    def get_total_assets(self,obj):
+
+    def get_total_assets(self, obj):
         asset = Asset.objects.filter(asset_model=obj)
         if asset.exists():
             return asset.count()
         return 0
-
-        
 
     class Meta:
         model = AssetModel
@@ -135,7 +138,7 @@ class AssetLocationSerializer(serializers.ModelSerializer):
 
 class AssetLocationListSerializer(serializers.ModelSerializer):
     assets = serializers.SerializerMethodField()
-    licenses = serializers.SerializerMethodField()
+    # licenses = serializers.SerializerMethodField()
     consumables = serializers.SerializerMethodField()
     accessories = serializers.SerializerMethodField()
 
@@ -144,24 +147,29 @@ class AssetLocationListSerializer(serializers.ModelSerializer):
         if assets:
             return assets.count()
         return 0
-    
-    def get_licenses(self,obj):
-        licenses = License.objects.filter(licensed_to=obj)
-        if licenses:
-            return licenses.count()
-        return 0
-        
-    def get_consumables(self,obj):
-        consumable = Asset.objects.filter(location=obj,category__asset_type__name='consumables')
+
+    # def get_licenses(self,obj):
+    #     licenses = License.objects.filter(licensed_to=obj.)
+    #     if licenses:
+    #         return licenses.count()
+    #     return 0
+
+    def get_consumables(self, obj):
+        consumable = Asset.objects.filter(
+            location=obj, category__asset_type__name="consumables"
+        )
         if consumable:
             return consumable.count()
         return 0
-    
-    def get_accessories(self,obj):
-        accessory = Asset.objects.filter(location=obj,category__asset_type__name='accessories')
+
+    def get_accessories(self, obj):
+        accessory = Asset.objects.filter(
+            location=obj, category__asset_type__name="accessories"
+        )
         if accessory:
             return accessory.count()
         return 0
+
     class Meta:
         model = AssetLocation
         fields = "__all__"
@@ -211,21 +219,25 @@ class CompanyListSerializer(serializers.ModelSerializer):
         if assets:
             return assets.count()
         return 0
-    
-    def get_licenses(self,obj):
+
+    def get_licenses(self, obj):
         licenses = License.objects.filter(company=obj)
         if licenses:
             return licenses.count()
         return 0
-        
-    def get_consumables(self,obj):
-        consumable = Asset.objects.filter(company=obj,category__asset_type__name='consumables')
+
+    def get_consumables(self, obj):
+        consumable = Asset.objects.filter(
+            company=obj, category__asset_type__name="consumables"
+        )
         if consumable:
             return consumable.count()
         return 0
-    
-    def get_accessories(self,obj):
-        accessory = Asset.objects.filter(company=obj,category__asset_type__name='accessories')
+
+    def get_accessories(self, obj):
+        accessory = Asset.objects.filter(
+            company=obj, category__asset_type__name="accessories"
+        )
         if accessory:
             return accessory.count()
         return 0
@@ -260,7 +272,7 @@ class AssetSupplierCreateUpdateSerializer(serializers.ModelSerializer):
 class AssetSupplierListSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     assets = serializers.SerializerMethodField()
-    # licenses = serializers.SerializerMethodField()
+    licenses = serializers.SerializerMethodField()
     consumables = serializers.SerializerMethodField()
     accessories = serializers.SerializerMethodField()
     # location = serializers.SerializerMethodField()
@@ -270,21 +282,25 @@ class AssetSupplierListSerializer(serializers.ModelSerializer):
         if assets:
             return assets.count()
         return 0
-    
-    # def get_licenses(self,obj):
-    #     licenses = License.objects.filter(licensed_to__department__id=obj.id)
-    #     if licenses:
-    #         return licenses.count()
-    #     return 0
-        
-    def get_consumables(self,obj):
-        consumable = Asset.objects.filter(supplier=obj,category__asset_type__name='consumables')
+
+    def get_licenses(self, obj):
+        licenses = License.objects.filter(licensed_to__department__id=obj.id)
+        if licenses:
+            return licenses.count()
+        return 0
+
+    def get_consumables(self, obj):
+        consumable = Asset.objects.filter(
+            supplier=obj, category__asset_type__name="consumables"
+        )
         if consumable:
             return consumable.count()
         return 0
-    
-    def get_accessories(self,obj):
-        accessory = Asset.objects.filter(supplier=obj,category__asset_type__name='accessories')
+
+    def get_accessories(self, obj):
+        accessory = Asset.objects.filter(
+            supplier=obj, category__asset_type__name="accessories"
+        )
         if accessory:
             return accessory.count()
         return 0
@@ -310,7 +326,7 @@ class AssetListSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
     category = serializers.SerializerMethodField()
-    #company = serializers.SerializerMethodField()
+    # company = serializers.SerializerMethodField()
     supplier = serializers.SerializerMethodField()
     current_assignee = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
@@ -345,8 +361,8 @@ class AssetListSerializer(serializers.ModelSerializer):
                 "id": obj.location.id,
                 "uid": obj.location.uid,
                 "location": obj.location.location_name,
-                "city":obj.location.city,
-                "country":obj.location.country,
+                "city": obj.location.city,
+                "country": obj.location.country,
             }
 
         else:
@@ -397,7 +413,7 @@ class AssetRequestListSerializer(serializers.ModelSerializer):
             }
         else:
             return None
-        
+
     def get_submitted_by(self, obj):
         if obj.submitted_by:
             return {
@@ -424,8 +440,8 @@ class AssetRequestListSerializer(serializers.ModelSerializer):
                 "id": obj.location.id,
                 "uid": obj.location.uid,
                 "location": obj.location.location_name,
-                "city":obj.location.city,
-                "country":obj.location.country,
+                "city": obj.location.city,
+                "country": obj.location.country,
             }
 
         else:
@@ -527,6 +543,7 @@ class AssetCheckoutListSerializer(serializers.ModelSerializer):
             }
         else:
             return None
+
     class Meta:
         model = AssetCheckOut
         fields = "__all__"
@@ -623,4 +640,121 @@ class AssetMaintenanceRequestListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AssetMaintenanceRequest
+        fields = "__all__"
+
+
+class ComponentsCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Components
+        fields = "__all__"
+
+
+class ComponentsListSerializer(serializers.ModelSerializer):
+    model = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+    company = serializers.SerializerMethodField()
+    supplier = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+
+    def get_model(self, obj):
+        if obj.model:
+            return AssetModelListSerializer(obj.model).data
+        else:
+            return None
+
+    def get_location(self, obj):
+        if obj.location:
+            return {
+                "id": obj.location.id,
+                "uid": obj.location.uid,
+                "location": obj.location.location_name,
+            }
+
+        else:
+            return None
+
+    def get_category(self, obj):
+        return (
+            {"id": obj.category.id, "uid": obj.category.uid, "name": obj.category.name}
+            if obj.category
+            else None
+        )
+
+    def get_company(self, obj):
+        if obj.company:
+            return CompanyListSerializer(obj.company).data
+        else:
+            return None
+
+    def get_supplier(self, obj):
+        if obj.supplier:
+            return AssetSupplierListSerializer(obj.supplier).data
+        else:
+            return None
+
+    def get_status(self, obj):
+        if obj.status:
+            return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
+
+        else:
+            return None
+
+    class Meta:
+        model = Components
+        fields = "__all__"
+
+
+class ComponentCheckInCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComponentCheckIn
+        fields = "__all__"
+
+
+class ComponentCheckInListSerializer(serializers.ModelSerializer):
+    component = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+
+    def get_user(self, obj):
+        if obj.user:
+            return {
+                "id": obj.user.id,
+                "uid": obj.user.uid,
+                "full_name": f"{obj.user.first_name} {obj.user.last_name}",
+            }
+        else:
+            return None
+
+    def get_component(self, obj):
+        if obj.component:
+            return {
+                "id": obj.component.id,
+                "uid": obj.component.uid,
+                "name": obj.component.name,
+            }
+        else:
+            return None
+
+    def get_location(self, obj):
+        if obj.location:
+            return {
+                "id": obj.location.id,
+                "uid": obj.location.uid,
+                "location": obj.location.location_name,
+            }
+
+        else:
+            return None
+
+    def get_status(self, obj):
+        if obj.status:
+            return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
+
+        else:
+            return None
+
+    class Meta:
+        model = ComponentCheckIn
         fields = "__all__"

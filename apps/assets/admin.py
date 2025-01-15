@@ -14,6 +14,8 @@ from apps.assets.models import (
     AssetModel,
     AssetLocation,
     Company,
+    Components,
+    ComponentCheckIn,
 )
 
 
@@ -39,6 +41,8 @@ class BaseAdmin(admin.ModelAdmin):
     AssetModel,
     AssetLocation,
     Company,
+    Components,
+    ComponentCheckIn,
 )
 class AssetAdmin(BaseAdmin):
     pass

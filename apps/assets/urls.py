@@ -16,6 +16,8 @@ from apps.assets.views import (
     AssetCategoryTypesViewset,
     AssetCheckInViewset,
     AssetCheckoutViewset,
+    ComponentsViewset,
+    ComponentCheckInViewset,
 )
 
 from rest_framework.routers import DefaultRouter
@@ -45,7 +47,8 @@ router.register(
     r"maitenance-request", MaintenanceRequestViewSet, basename="maintenance-request"
 )
 router.register(r"asset-supplier", AssetSupplierViewSet, "asset-supplier")
-
+router.register(r"components", ComponentsViewset, "components")
+router.register(r'component-check-in', ComponentCheckInViewset, 'component-check-in')
 
 urlpatterns = [
     path("", include(router.urls)),

@@ -22,7 +22,7 @@ class AssetManufacturer(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
     web_url = models.URLField(null=True, blank=True)
-    support_url = models.CharField(max_length=120,null=True, blank=True)
+    support_url = models.CharField(max_length=120, null=True, blank=True)
     email = models.EmailField()
     phone = models.CharField(max_length=13)
     image = models.ImageField(upload_to="manufacturers/", null=True, blank=True)
@@ -41,10 +41,10 @@ class AssetManufacturer(models.Model):
 class AssetModel(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
-    model_no = models.CharField(max_length=120,null=True, blank=True)
+    model_no = models.CharField(max_length=120, null=True, blank=True)
     fieldset = models.TextField(null=True, blank=True)
     category = models.ForeignKey(AssetModelCategory, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="assets/",null=True,blank=True)
+    image = models.ImageField(upload_to="assets/", null=True, blank=True)
     manufacturer = models.ForeignKey(AssetManufacturer, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
     note = models.TextField(null=True, blank=True)
@@ -139,6 +139,7 @@ class Company(models.Model):
     image = models.ImageField(upload_to="companies/", null=True, blank=True)
     company_phone = models.CharField(max_length=120)
     company_mail = models.EmailField()
+    website = models.URLField(null=True, blank=True)
     fax = models.CharField(max_length=120, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -193,7 +194,9 @@ class Asset(models.Model):
     image = models.ImageField(upload_to="assets/", null=True, blank=True)
     order_number = models.CharField(max_length=120)
     supplier = models.ForeignKey(AssetSupplier, on_delete=models.CASCADE)
-    manufacturer = models.ForeignKey(AssetManufacturer, on_delete=models.CASCADE, null=True, blank=True)
+    manufacturer = models.ForeignKey(
+        AssetManufacturer, on_delete=models.CASCADE, null=True, blank=True
+    )
     current_assignee = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, null=True, blank=True
     )
@@ -209,9 +212,6 @@ class Asset(models.Model):
 
     def __str__(self) -> str:
         return self.name
-    
-   
-        
 
 
 class AssetRequest(models.Model):
@@ -248,8 +248,10 @@ class AssetCheckIn(models.Model):
         "people.User", on_delete=models.CASCADE, null=True, blank=True
     )
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
-    name = models.CharField(max_length=120,null=True, blank=True)
-    status = models.ForeignKey(AssetStatus, on_delete=models.CASCADE,null=True, blank=True)
+    name = models.CharField(max_length=120, null=True, blank=True)
+    status = models.ForeignKey(
+        AssetStatus, on_delete=models.CASCADE, null=True, blank=True
+    )
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     checkin_date = models.DateField()
     note = models.TextField(null=True, blank=True)
@@ -268,24 +270,31 @@ class AssetCheckIn(models.Model):
     #     if self.status.name == "checked_in":
     #         self.asset.status = self.status.name
     #     return super().save(*args, **kwargs)
-    
+
 
 class AssetCheckOut(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     asset_request = models.ForeignKey(AssetRequest, on_delete=models.CASCADE)
-    user = models.ForeignKey("people.User", on_delete=models.CASCADE,related_name='asset_checkout_user')
-    checkout_by = models.ForeignKey("people.User", on_delete=models.CASCADE,related_name='asset_checkout_checkout_by')
+    user = models.ForeignKey(
+        "people.User", on_delete=models.CASCADE, related_name="asset_checkout_user"
+    )
+    checkout_by = models.ForeignKey(
+        "people.User",
+        on_delete=models.CASCADE,
+        related_name="asset_checkout_checkout_by",
+    )
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Asset CheckOut'
-        verbose_name_plural = 'Asset CheckOuts'
-        ordering = ['-created_at']
+        verbose_name = "Asset CheckOut"
+        verbose_name_plural = "Asset CheckOuts"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.asset_request.asset.name
+
 
 class AssetReturn(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -312,7 +321,7 @@ class AssetMaintenanceRequest(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     user = models.ForeignKey("people.User", on_delete=models.CASCADE)
     request_date = models.DateField()
-    status = models.CharField(max_length=120,default='pending')
+    status = models.CharField(max_length=120, default="pending")
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -325,3 +334,58 @@ class AssetMaintenanceRequest(models.Model):
 
     def __str__(self):
         return self.asset.name
+
+
+class Components(models.Model):
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(max_length=120)
+    order_number = models.CharField(max_length=120)
+    item_number = models.CharField(max_length=120)
+    model = models.ForeignKey(AssetModel, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=0)
+    location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
+    category = models.ForeignKey(AssetCategory, on_delete=models.CASCADE)
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, null=True, blank=True
+    )
+    purchase_cost = models.PositiveIntegerField(default=0)
+    image = models.ImageField(upload_to="components/", null=True, blank=True)
+    purchase_date = models.DateField()
+    status = models.ForeignKey(AssetStatus, on_delete=models.CASCADE)
+    supplier = models.ForeignKey(AssetSupplier, on_delete=models.CASCADE)
+    note = models.TextField(null=True, blank=True)
+    current_assignee = models.ForeignKey(
+        "people.User", on_delete=models.CASCADE, null=True, blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Component"
+        verbose_name_plural = "Components"
+        ordering = ["-created_at"]
+
+
+class ComponentCheckIn(models.Model):
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(
+        "people.User", on_delete=models.CASCADE, null=True, blank=True
+    )
+    component = models.ForeignKey(Components, on_delete=models.CASCADE)
+    name = models.CharField(max_length=120, null=True, blank=True)
+    status = models.ForeignKey(
+        AssetStatus, on_delete=models.CASCADE, null=True, blank=True
+    )
+    location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
+    checkin_date = models.DateField()
+    note = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Component CheckIn"
+        verbose_name_plural = "Component CheckIns"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.component.name
