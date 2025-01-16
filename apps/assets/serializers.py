@@ -65,7 +65,7 @@ class AssetManufacturerListSerializer(serializers.ModelSerializer):
 
     def get_consumables(self, obj):
         consumable = Asset.objects.filter(
-            manufacturer=obj, category__asset_type__name="consumables"
+            manufacturer=obj, category__name="consumables"
         )
         if consumable:
             return consumable.count()
@@ -73,7 +73,7 @@ class AssetManufacturerListSerializer(serializers.ModelSerializer):
 
     def get_accessories(self, obj):
         accessory = Asset.objects.filter(
-            manufacturer=obj, category__asset_type__name="accessories"
+            manufacturer=obj, category__name="accessories"
         )
         if accessory:
             return accessory.count()
@@ -156,7 +156,7 @@ class AssetLocationListSerializer(serializers.ModelSerializer):
 
     def get_consumables(self, obj):
         consumable = Asset.objects.filter(
-            location=obj, category__asset_type__name="consumables"
+            location=obj, category__name="consumables"
         )
         if consumable:
             return consumable.count()
@@ -164,7 +164,7 @@ class AssetLocationListSerializer(serializers.ModelSerializer):
 
     def get_accessories(self, obj):
         accessory = Asset.objects.filter(
-            location=obj, category__asset_type__name="accessories"
+            location=obj, category__name="accessories"
         )
         if accessory:
             return accessory.count()
@@ -228,7 +228,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
 
     def get_consumables(self, obj):
         consumable = Asset.objects.filter(
-            company=obj, category__asset_type__name="consumables"
+            company=obj, category__name="consumables"
         )
         if consumable:
             return consumable.count()
@@ -236,7 +236,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
 
     def get_accessories(self, obj):
         accessory = Asset.objects.filter(
-            company=obj, category__asset_type__name="accessories"
+            company=obj, category__name="accessories"
         )
         if accessory:
             return accessory.count()
@@ -291,7 +291,7 @@ class AssetSupplierListSerializer(serializers.ModelSerializer):
 
     def get_consumables(self, obj):
         consumable = Asset.objects.filter(
-            supplier=obj, category__asset_type__name="consumables"
+            supplier=obj, category__name="consumables"
         )
         if consumable:
             return consumable.count()
@@ -299,7 +299,7 @@ class AssetSupplierListSerializer(serializers.ModelSerializer):
 
     def get_accessories(self, obj):
         accessory = Asset.objects.filter(
-            supplier=obj, category__asset_type__name="accessories"
+            supplier=obj, category__name="accessories"
         )
         if accessory:
             return accessory.count()

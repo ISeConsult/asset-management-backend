@@ -342,6 +342,7 @@ class Components(models.Model):
     order_number = models.CharField(max_length=120)
     item_number = models.CharField(max_length=120)
     model = models.ForeignKey(AssetModel, on_delete=models.CASCADE)
+    manufacturer = models.ForeignKey(AssetManufacturer,on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     category = models.ForeignKey(AssetCategory, on_delete=models.CASCADE)

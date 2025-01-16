@@ -188,6 +188,37 @@ class AssetCategoryViewSet(viewsets.ModelViewSet):
                 {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
 
+    @action(detail=True, methods=['get'], permission_classes=[TokenRequiredPermission], url_path='category-detail')
+    def get_category_details(self, request, *args, **kwargs):
+        try:
+            cat_id = kwargs.get('uid')
+
+            if not cat_id:
+                return Response({'success': False, 'info': 'Category UID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Fetch assets under the category
+            assets = Asset.objects.filter(category__uid=cat_id)
+            asset_serializer = AssetListSerializer(assets, many=True).data
+
+            # Fetch asset models associated with the category
+            asset_models = AssetModel.objects.filter(asset__category__uid=cat_id).distinct()
+            asset_model_serializer = AssetModelListSerializer(asset_models, many=True).data
+
+            # Prepare the final response
+            return Response({
+                'success': True,
+                'info': {
+                    'assets': asset_serializer,
+                    'asset_models': asset_model_serializer
+                }
+            })
+
+        except Exception as e:
+            logger.warning(f"Error in get_category_details: {str(e)}")
+            return Response(
+                {'success': False, 'info': 'An error occurred while processing your request'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class AssetManufacturerViewset(viewsets.ModelViewSet):
     queryset = AssetManufacturer.objects.all()
@@ -256,7 +287,40 @@ class AssetManufacturerViewset(viewsets.ModelViewSet):
                 {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
 
+    @action(detail=True,methods=['get'],permission_classes=[TokenRequiredPermission],url_path='manufacturer-detail')
+    def get_manufacturer_details(self,request,*args,**kwargs):
+        try:
+            man_id = kwargs.get('uid')
 
+            if not man_id:
+                return Response({"success":False,"info":"Manufacturer's uid not provided"},status=status.HTTP_400_BAD_REQUEST)
+            
+            assets = Asset.objects.select_related('manufacturer').filter(manufacturer__uid=man_id)
+            ass_serializer = AssetListSerializer(assets,many=True).data
+
+            accessories = assets.filter(category__name='accessories')
+            acc_serializer = AssetListSerializer(accessories,many=True).data
+
+            consumables = assets.filter(category__name='consumables')
+            con_serializer = AssetListSerializer(consumables,many=True).data
+
+            comp = Components.objects.filter(manufacturer__uid=man_id)
+            component = ComponentsListSerializer(comp,many=True).data
+
+            return Response({
+                'success':True,
+                'info': {
+                'assets': ass_serializer,
+                'consumables':con_serializer,
+                'accessories': acc_serializer,
+                'components':component
+            }
+            
+            })
+            
+        except Exception as e:
+            logger.warning(str(e))
+            return Response({'success':False,'info':'An error occured whilst processing your request'},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 class AssetLocationViewset(viewsets.ModelViewSet):
     queryset = AssetLocation.objects.all()
     permission_classes = [TokenRequiredPermission]
@@ -520,6 +584,29 @@ class AssetModelViewset(viewsets.ModelViewSet):
             return Response(
                 {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
+
+    @action(detail=True,methods=['get'],permission_classes=[TokenRequiredPermission],url_path='asset-model-detail')
+    def list_assets_under_Assetmodel(self,request,*args,**kwargs):
+        try:
+            print(f"uid {kwargs.get('uid')}")
+            model_id = kwargs.get('uid')
+
+            if not model_id:
+                return Response({'success': False, 'info': 'Model ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+            asset = Asset.objects.filter(asset_model__uid=model_id)
+
+            serializer = AssetListSerializer(asset,many=True).data
+
+            return Response({'success':True,'info':serializer},status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            logger.warning(str(e))
+            return Response({'success':False,'info':'An error occured whilst processing your request'},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
 
 
 class AssetModelCategoryViewset(viewsets.ModelViewSet):
