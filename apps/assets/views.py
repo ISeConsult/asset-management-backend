@@ -7,6 +7,8 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from django.db import transaction
 from apps.assets.pagination import FetchDataPagination
+from apps.licence.models import License
+from apps.licence.serializers import LicenseListSerializer
 from apps.people.models import User
 from apps.people.permissions import TokenRequiredPermission, AdminCheckPermission
 from apps.assets.models import (
@@ -63,6 +65,7 @@ from apps.assets.serializers import (
     ComponentCheckInCreateUpdateSerializer,
     ComponentCheckInListSerializer,
 )
+from apps.people.serializers import UserListSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -396,6 +399,44 @@ class AssetLocationViewset(viewsets.ModelViewSet):
                 {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
 
+    @action(detail=True,methods=['get'],permission_classes=[TokenRequiredPermission],url_path='location-detail')
+    def get_location_details(self,request,*args,**kwargs):
+        try:
+            location_id = kwargs.get('uid')
+
+            if not location_id:
+                return Response({'success':False,'info':'location_id not provided'},status=status.HTTP_400_BAD_REQUEST)
+            
+            asset = Asset.objects.filter(location__uid=location_id)
+            asset_data = AssetListSerializer(asset,many=True).data
+
+            accessories = asset.filter(category__name='accessories')
+            acc_serializer = AssetListSerializer(accessories,many=True).data
+
+            consumables = asset.filter(category__name='consumables')
+            con_serializer = AssetListSerializer(consumables,many=True).data
+
+            comp = Components.objects.filter(location__uid=location_id)
+            component = ComponentsListSerializer(comp,many=True).data
+
+            user_data = User.objects.filter(location__uid=location_id)
+            users = UserListSerializer(user_data,many=True).data
+
+            return Response({
+                'success':True,
+                'info': {
+                    'assets':asset_data,
+                    'accessories':acc_serializer,
+                    'consumables':con_serializer,
+                    'components':component,
+                    'users':users
+                }
+            })
+
+
+        except Exception as e:
+            logger.warning(str(e))
+            return Response({'success':False,'info':'An error occured whilst processing your request'},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class CompanyViewset(viewsets.ModelViewSet):
     queryset = Company.objects.all()
@@ -488,6 +529,48 @@ class CompanyViewset(viewsets.ModelViewSet):
                 {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
 
+    @action(detail=True,methods=['get'],permission_classes=[TokenRequiredPermission],url_path='company-detail')
+    def company_details(self,request,*args,**kwargs):
+        try:
+            company_id = kwargs.get('uid')
+
+            if not company_id:
+                return Response({'success':False,'info':'Company UID not provided'},status=status.HTTP_400_BAD_REQUEST)
+            
+            asset = Asset.objects.filter(company__uid=company_id)
+            asset_data = AssetListSerializer(asset,many=True).data
+
+            accessories = asset.filter(category__name='accessories')
+            acc_serializer = AssetListSerializer(accessories,many=True).data
+
+            consumables = asset.filter(category__name='consumables')
+            con_serializer = AssetListSerializer(consumables,many=True).data
+
+            comp = Components.objects.filter(company__uid=company_id)
+            component = ComponentsListSerializer(comp,many=True).data
+
+            user_data = User.objects.filter(department__company__uid=company_id)
+            users = UserListSerializer(user_data,many=True).data
+
+            lisc = License.objects.filter(company__uid=company_id)
+            licenses = LicenseListSerializer(lisc,many=True).data
+
+            return Response({
+                'success':True,
+                'info': {
+                    'assets':asset_data,
+                    'accessories':acc_serializer,
+                    'consumables':con_serializer,
+                    'components':component,
+                    'licenses':licenses,
+                    'users':users
+                }
+            })
+
+
+        except Exception as e:
+            logger.warning(str(e))
+            return Response({'success':False,'info':'An error occured whilst processing your request'},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AssetModelViewset(viewsets.ModelViewSet):
     queryset = AssetModel.objects.all()
@@ -1319,7 +1402,41 @@ class AssetSupplierViewSet(viewsets.ModelViewSet):
                 {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
 
+    @action(detail=True,methods=['get'],permission_classes=[TokenRequiredPermission],url_path='supplier-details')
+    def get_suplier_details(self,request,*args,**kwargs):
+        try:
+            
+            supply_id = kwargs.get('uid')
 
+            if not supply_id:
+                return Response({'success':'Suplier_id not found'})
+            
+            asset_data = Asset.objects.filter(supplier__uid=supply_id)
+            asset = AssetListSerializer(asset_data,many=True).data
+
+            comp = Components.objects.filter(supplier__uid=supply_id)
+            components = ComponentsListSerializer(comp,many=True).data
+
+            consu = asset_data.filter(category__name='consumables')
+            consumables = AssetListSerializer(consu,many=True).data
+
+            acc_data = asset_data.filter(category__name='accessories')
+            accessories = AssetListSerializer(acc_data,many=True).data
+
+            return Response({
+                "success":True,
+                "info": {
+                    'assets':asset,
+                    'components':components,
+                    'consumables':consumables,
+                    'accessories':accessories
+                }
+            })
+
+
+        except Exception as e:
+            logger.warning(str(e))
+            return Response({'success':False,'info':'An error occured whilst processing your request'})
 class AssetCheckInViewset(viewsets.ModelViewSet):
     queryset = AssetCheckIn.objects.all()
     permission_classes = [TokenRequiredPermission]

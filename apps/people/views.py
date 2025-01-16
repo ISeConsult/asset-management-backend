@@ -17,9 +17,10 @@ from rest_framework.decorators import api_view, permission_classes, action
 from apps.people.utils import send_notification
 from apps.people.auth import Authenticator
 from apps.people.utils import send_login_credentials
-
+import logging
 # Create your views here.
 
+logger = logging.getLogger(__name__)
 
 auth = Authenticator()
 
@@ -127,6 +128,25 @@ class DepartmentViewset(viewsets.ModelViewSet):
             {"success": True, "info": serializer.data}, status=status.HTTP_201_CREATED
         )
 
+    @action(detail=True,methods=['get'],permission_classes=[TokenRequiredPermission],url_path='department-details')
+    def get_department_details(self,request,*args,**kwargs):
+        try:
+            department_id = kwargs.get('uid')
+
+            if not department_id:
+                return Response({'success':False,'info':'department_id was not provided'},status=status.HTTP_400_BAD_REQUEST)
+ 
+            dept = Department.objects.filter(uid=department_id).first()
+
+            users = User.objects.filter(department=dept)
+
+            users_list =  UserListSerializer(users,many=True).data
+
+            return Response({'success':True,'info':users_list})
+
+        except Exception as e:
+            logger.warning(str(e))
+            return Response({'success':False,'info':'An error occured whilst processing your request'},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class UserViewset(viewsets.ModelViewSet):
     queryset = User.objects.all()
