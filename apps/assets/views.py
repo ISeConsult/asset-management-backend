@@ -1562,25 +1562,42 @@ class AssetCheckoutViewset(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data
         asset_request = data.get("asset_request")
-        request_status = data.get("request_status")
+        user = data.get("user")
+        check_asset = data.get('asset')
+        
 
-        if not asset_request:
+        if not user:
             return Response(
-                {"success": False, "info": "asset request is required"},
+                {"success": False, "info": "user is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        if not check_asset:
+            return Response(
+                {"success": False, "info": "asset is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        asset = Asset.objects.filter(id=check_asset).first()
+
+        if not asset:
+            return Response(
+                {"success": False, "info": "Asset does not exist"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        ass_request = AssetRequest.objects.filter(id=asset_request).first()
+        if asset_request:
+            data['asset_request'] = asset_request
+            ass_request = AssetRequest.objects.filter(id=asset_request).first()
 
-        if not ass_request:
-            return Response(
-                {"success": False, "info": "Asset request does not exist"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            if not ass_request:
+                return Response(
+                    {"success": False, "info": "Asset request does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
 
         data["checkout_by"] = request.user.id
-
-        data["user"] = ass_request.user.id
 
         asset_status = AssetStatus.objects.get(name="checked_out")
         if not asset_status:
@@ -1588,17 +1605,10 @@ class AssetCheckoutViewset(viewsets.ModelViewSet):
                 {"success": False, "info": "Asset status does not exist"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if request_status == "approved":
-            ass_request.status = "approved"
-            ass_request.asset.current_assignee = ass_request.user
-            ass_request.asset.status = asset_status
-            ass_request.asset.save(update_fields=["current_assignee", "status"])
-            ass_request.save(update_fields=["status"])
-
-        else:
-            ass_request.status = "rejected"
-            ass_request.save(update_fields=["status"])
-
+        
+        asset.status = asset_status
+        asset.save(update_fields=['status'])
+        
         serializer = self.get_serializer(data=data)
         try:
             serializer.is_valid(raise_exception=True)

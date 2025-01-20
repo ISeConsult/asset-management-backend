@@ -65,6 +65,7 @@ class User(AbstractUser):
     department = models.ForeignKey(
         Department, on_delete=models.CASCADE, null=True, blank=True
     )
+    image = models.ImageField(upload_to="user/images", null=True, blank=True)
     location = models.CharField(max_length=300, null=True, blank=True)
     login_enabled = models.BooleanField(default=True)
     password_changed = models.BooleanField(default=False)

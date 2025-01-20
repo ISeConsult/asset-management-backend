@@ -37,7 +37,7 @@ router.register(r"asset-model", AssetModelViewset, basename="asset-model")
 router.register(
     r"assetmodel-category", AssetModelCategoryViewset, "assetmodel-category"
 )
-router.register(r"asset-status", AssetStatusViewSet, "asset-status")
+router.register(r"asset-status", AssetStatusViewSet, "asset-status")    
 router.register(r"assets", AssetViewset, basename="assets")
 router.register(r"asset-request", AssetRequestViewSet, "asset-request")
 router.register(r"asset-check-in", AssetCheckInViewset, basename="asset-check-in")

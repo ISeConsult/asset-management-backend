@@ -64,8 +64,13 @@ models
 3. AssetCheckouts -- users can only see their own checkouts
 4. AssetReturns
 5. Maintenance Reqests
-6. Requestable assets -- users can see all requestable assets
+6. Requestable assets -- users can see all requestable asset
 
+Locations
+1. Users including admin should only see assets in their location
+2. Admins should see all assets in their location
+3. Superadmins should see all assets in all locations
+4. Users should only see their own requests in their location
 """
         
         

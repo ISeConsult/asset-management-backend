@@ -3,6 +3,7 @@ from apps.assets.models import (
     AssetRequest,
     AssetMaintenanceRequest,
     Asset,
+    Components,
 )
 from apps.licence.models import License
 from apps.people.models import Department, Role, User
@@ -114,6 +115,7 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
 class UserListSerializer(serializers.ModelSerializer):
     department = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
 
     # calculate the total amounts for all the below and return them
     assigned_assets = serializers.SerializerMethodField()
@@ -123,6 +125,16 @@ class UserListSerializer(serializers.ModelSerializer):
     licenses = serializers.SerializerMethodField()
     consumables = serializers.SerializerMethodField()
     accessories = serializers.SerializerMethodField()
+    components = serializers.SerializerMethodField()
+
+    def get_components(self,obj):
+        components = Components.objects.filter(current_assignee=obj)
+        if components:
+            return components.count()
+        
+    def get_image(self, obj):
+        if obj.image:
+            return config("BASE_URL") + obj.image.url
 
     def get_assets(self, obj):
         assets = Asset.objects.filter(current_assignee=obj)
@@ -137,13 +149,13 @@ class UserListSerializer(serializers.ModelSerializer):
         return 0
         
     def get_consumables(self,obj):
-        consumable = Asset.objects.filter(current_assignee=obj,category__asset_type__name='consumables')
+        consumable = Asset.objects.filter(current_assignee=obj,category__name='consumables')
         if consumable:
             return consumable.count()
         return 0
     
     def get_accessories(self,obj):
-        accessory = Asset.objects.filter(current_assignee=obj,category__asset_type__name='accessories')
+        accessory = Asset.objects.filter(current_assignee=obj,category__name='accessories')
         if accessory:
             return accessory.count()
         return 0
