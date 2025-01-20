@@ -1496,7 +1496,7 @@ class AssetCheckInViewset(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        data['location'] = asset.location
+        data['location'] = asset.location.id
 
         data["checkin_date"] = arrow.now().date()
         data["user"] = request.user.id
