@@ -1080,10 +1080,8 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data
         required_fields = [
-            "user",
             "asset",
-            "note",
-            "location",
+            "note"
         ]
 
         for field in required_fields:
@@ -1101,17 +1099,6 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not User.objects.filter(id=data.get("user")).exists():
-            return Response(
-                {"success": False, "info": "User does not exist"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not AssetLocation.objects.filter(id=data.get("location")).exists():
-            return Response(
-                {"success": False, "info": "Asset location does not exist"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
         if asset.current_assignee or asset.status.name == "checked_out":
             return Response(
@@ -1121,6 +1108,8 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
 
         now = datetime.datetime.now().date()
         data["request_date"] = now
+        data["user"] = request.user.id
+        data["location"] = asset.location.id
         print(now)
 
         data["submitted_by"] = request.user.id
@@ -1132,6 +1121,50 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
             {"success": True, "info": "Asset request added successfully"},
             status=status.HTTP_201_CREATED,
         )
+
+    @action(detail=False, methods=["post"], permission_classes=[TokenRequiredPermission], url_path="cancel-request")
+    def cancel_request(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            aset_request = data.get("asset_request")
+            note = data.get('note')
+
+            if not aset_request:
+                return Response(
+                    {"success": False, "info": "asset_request is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            if not note:
+                return Response(
+                    {"success": False, "info": "note is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            asset_request = AssetRequest.objects.filter(id=aset_request).first()
+
+            if not asset_request:
+                return Response(
+                    {"success": False, "info": "Asset request does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            asset_request.status = "rejected"
+            asset_request.note = note
+            asset_request.save(update_fields=["status","note"])
+
+            return Response(
+                {"success": True, "info": "Asset request cancelled successfully"},
+                status=status.HTTP_200_OK,
+            )
+
+
+
+        except Exception as e:
+            logger.warning(f"Error cancelling asset request: {str(e)}")
+            return Response(
+                {"success": False, "info": "An error occured whilst processing your request"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class AssetReturnViewSet(viewsets.ModelViewSet):
@@ -1592,6 +1625,9 @@ class AssetCheckoutViewset(viewsets.ModelViewSet):
                     {"success": False, "info": "Asset request does not exist"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            
+            ass_request.status = 'approved'
+            ass_request.save(update_fields=['status'])
             
 
         data["checkout_by"] = request.user.id

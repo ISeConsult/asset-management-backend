@@ -415,6 +415,7 @@ class AssetRequestListSerializer(serializers.ModelSerializer):
             return None
 
     def get_submitted_by(self, obj):
+        print(obj)
         if obj.submitted_by:
             return {
                 "id": obj.submitted_by.id,

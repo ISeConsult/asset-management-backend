@@ -227,7 +227,7 @@ class AssetRequest(models.Model):
     )
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     expected_checkin_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=120, blank=True, null=True)
+    status = models.CharField(max_length=120, default="pending")
     submitted_by = models.ForeignKey("people.User", on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
