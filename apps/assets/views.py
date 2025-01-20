@@ -772,6 +772,15 @@ class AssetStatusViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if AssetStatus.objects.filter(name=name).exists():
+            return Response(
+                {
+                    "success": False,
+                    "info": "Asset status already exists",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = self.get_serializer(data=data)
         try:
             serializer.is_valid(raise_exception=True)
@@ -1471,7 +1480,6 @@ class AssetCheckInViewset(viewsets.ModelViewSet):
         data = request.data
 
         asset = data.get("asset")
-        location = data.get("location")
 
         if not asset:
             return Response(
@@ -1479,11 +1487,6 @@ class AssetCheckInViewset(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not location:
-            return Response(
-                {"success": False, "info": "location is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
         asset = Asset.objects.filter(id=asset).first()
 
@@ -1493,13 +1496,7 @@ class AssetCheckInViewset(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        location = AssetLocation.objects.filter(id=location).first()
-
-        if not location:
-            return Response(
-                {"success": False, "info": "Asset location does not exist"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        data['location'] = asset.location
 
         data["checkin_date"] = arrow.now().date()
         data["user"] = request.user.id
