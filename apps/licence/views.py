@@ -377,7 +377,8 @@ class LicenseCheckoutViewset(viewsets.ModelViewSet):
 
             lisc.licensed_to = user_data
             lisc.licensed_to_email = user_data.email
-            lisc.save(update_fields=['licensed_to','licensed_to_email'])
+            lisc.status = 'checked_out'
+            lisc.save(update_fields=['licensed_to','licensed_to_email','status'])
 
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)

@@ -48,6 +48,7 @@ class License(models.Model):
     purchase_cost = models.PositiveIntegerField(default=0)
     termination_date = models.DateField(null=True,blank=True)
     purchase_date = models.DateField()
+    status = models.CharField(max_length=120,default="pending",choices=(("pending","Pending"),("checked_out","Checked Out"),("expired","Expired")))
     expiry_date = models.DateField(null=True,blank=True)
     note = models.TextField(null=True,blank=True)
     location = models.ForeignKey("assets.AssetLocation",on_delete=models.CASCADE)
