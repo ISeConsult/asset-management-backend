@@ -275,6 +275,7 @@ class AssetCheckIn(models.Model):
 class AssetCheckOut(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     asset_request = models.ForeignKey(AssetRequest, on_delete=models.CASCADE,null=True, blank=True)
+    asset = models.ForeignKey(Asset,on_delete=models.CASCADE) 
     user = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, related_name="asset_checkout_user"
     )
@@ -293,7 +294,7 @@ class AssetCheckOut(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return self.asset_request.asset.name
+        return self.asset.name
 
 
 class AssetReturn(models.Model):

@@ -518,6 +518,12 @@ class AssetCheckoutListSerializer(serializers.ModelSerializer):
     asset_request = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     checkout_by = serializers.SerializerMethodField()
+    assets = serializers.SerializerMethodField()
+
+    def get_assets(self,obj):
+        if obj.asset:
+            return AssetListSerializer(obj.asset).data
+        return None
 
     def get_asset_request(self, obj):
         if obj.asset_request:
