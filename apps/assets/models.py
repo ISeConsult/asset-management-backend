@@ -274,8 +274,10 @@ class AssetCheckIn(models.Model):
 
 class AssetCheckOut(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    asset_request = models.ForeignKey(AssetRequest, on_delete=models.CASCADE,null=True, blank=True)
-    asset = models.ForeignKey(Asset,on_delete=models.CASCADE) 
+    asset_request = models.ForeignKey(
+        AssetRequest, on_delete=models.CASCADE, null=True, blank=True
+    )
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     user = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, related_name="asset_checkout_user"
     )
@@ -343,7 +345,7 @@ class Components(models.Model):
     order_number = models.CharField(max_length=120)
     item_number = models.CharField(max_length=120)
     model = models.ForeignKey(AssetModel, on_delete=models.CASCADE)
-    manufacturer = models.ForeignKey(AssetManufacturer,on_delete=models.CASCADE)
+    manufacturer = models.ForeignKey(AssetManufacturer, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     category = models.ForeignKey(AssetCategory, on_delete=models.CASCADE)

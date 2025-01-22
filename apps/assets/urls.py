@@ -37,7 +37,7 @@ router.register(r"asset-model", AssetModelViewset, basename="asset-model")
 router.register(
     r"assetmodel-category", AssetModelCategoryViewset, "assetmodel-category"
 )
-router.register(r"asset-status", AssetStatusViewSet, "asset-status")    
+router.register(r"asset-status", AssetStatusViewSet, "asset-status")
 router.register(r"assets", AssetViewset, basename="assets")
 router.register(r"asset-request", AssetRequestViewSet, "asset-request")
 router.register(r"asset-check-in", AssetCheckInViewset, basename="asset-check-in")
@@ -48,7 +48,7 @@ router.register(
 )
 router.register(r"asset-supplier", AssetSupplierViewSet, "asset-supplier")
 router.register(r"components", ComponentsViewset, "components")
-router.register(r'component-check-in', ComponentCheckInViewset, 'component-check-in')
+router.register(r"component-check-in", ComponentCheckInViewset, "component-check-in")
 
 urlpatterns = [
     path("", include(router.urls)),
