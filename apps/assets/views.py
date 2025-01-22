@@ -66,6 +66,8 @@ from apps.assets.serializers import (
     ComponentCheckInListSerializer,
 )
 from apps.people.serializers import UserListSerializer
+from django.db import transaction
+from rest_framework.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -1589,81 +1591,102 @@ class AssetCheckoutViewset(viewsets.ModelViewSet):
             {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
         )
 
+
+
     def create(self, request, *args, **kwargs):
         data = request.data
-        asset_request = data.get("asset_request")
-        user_data = data.get("user")
-        check_asset = data.get('asset')
-        
+        asset_request_id = data.get("asset_request")
+        user_id = data.get("user")
+        asset_id = data.get("asset")
 
-        if not user_data:
+        if not user_id:
             return Response(
-                {"success": False, "info": "user is required"},
+                {"success": False, "info": "User ID is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        if not check_asset:
-            return Response(
-                {"success": False, "info": "asset is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        
-        asset = Asset.objects.filter(id=check_asset).first()
 
-        if not asset:
-            return Response(
-                {"success": False, "info": "Asset does not exist"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        
-        user = User.objects.filter(id=user_data).first()
+        asset = None
 
-        if not user:
-            return Response(
-                    {"success": False, "info": "User does not exist"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                ) 
-
-        if asset_request:
-            data['asset_request'] = asset_request
-            ass_request = AssetRequest.objects.filter(id=asset_request).first()
-
-            if not ass_request:
+        if asset_request_id:
+            # Retrieve the asset from the asset request
+            try:
+                asset_request = AssetRequest.objects.get(id=asset_request_id)
+            except AssetRequest.DoesNotExist:
                 return Response(
                     {"success": False, "info": "Asset request does not exist"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            
-            ass_request.status = 'approved'
-            ass_request.save(update_fields=['status'])
-            
 
-        data["checkout_by"] = request.user.id
+            # Ensure the asset is associated with the asset request
+            asset = asset_request.asset
+            if not asset:
+                return Response(
+                    {"success": False, "info": "No asset is associated with this asset request"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        asset_status = AssetStatus.objects.get(name="checked_out")
-        if not asset_status:
+            # Update asset request status to approved
+            asset_request.status = 'approved'
+            asset_request.save(update_fields=["status"])
+        else:
+            # If no asset request, validate the asset is passed in the request body
+            if not asset_id:
+                return Response(
+                    {"success": False, "info": "Asset ID is required when no asset request is provided"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                asset = Asset.objects.get(id=asset_id)
+            except Asset.DoesNotExist:
+                return Response(
+                    {"success": False, "info": "Asset does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"success": False, "info": "User does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            asset_status = AssetStatus.objects.get(name="checked_out")
+        except AssetStatus.DoesNotExist:
             return Response(
                 {"success": False, "info": "Asset status does not exist"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         asset.status = asset_status
         asset.current_assignee = user
-        asset.save(update_fields=['status','current_assignee'])
-        
-        serializer = self.get_serializer(data=data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(
-                {"success": True, "info": serializer.data},
-                status=status.HTTP_201_CREATED,
-            )
-        except Exception as e:
-            logger.warning(f"Error creating asset manufacturer: {str(e)}")
-            return Response(
-                {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
-            )
+
+        with transaction.atomic():
+            asset.save(update_fields=["status", "current_assignee"])
+            data["checkout_by"] = request.user.id
+            serializer = self.get_serializer(data=data)
+
+            try:
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(
+                    {"success": True, "info": serializer.data},
+                    status=status.HTTP_201_CREATED,
+                )
+            except ValidationError as e:
+                return Response(
+                    {"success": False, "error": e.detail},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except Exception as e:
+                logger.warning(f"Error creating asset checkout: {str(e)}")
+                return Response(
+                    {"success": False, "error": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
 
     
 
