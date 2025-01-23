@@ -4,7 +4,8 @@ from apps.licence.models import (
   LicenseCategoryTypes,
   LicenseCategory,
   License,
-  LicenseCheckOut
+  LicenseCheckOut,
+  LicenseHistory,
 )
 
 
@@ -122,4 +123,35 @@ class LicenseCheckOutListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LicenseCheckOut
+        fields = '__all__'
+
+
+class LicenseHistoryCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LicenseHistory
+        fields = '__all__'
+
+
+class LicenseHistoryListSerializer(serializers.ModelSerializer):
+    license = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+
+    def get_license(self,obj):
+        if obj.license:
+            return LicenseListSerializer(obj.license).data
+        else:
+            return None
+        
+    def get_user(self, obj):
+        if obj.user:
+            return {
+                "id": obj.user.id,
+                "uid": obj.user.uid,
+                "full_name": f"{obj.user.first_name} {obj.user.last_name}",
+            }
+        else:
+            return None
+
+    class Meta:
+        model = LicenseHistory
         fields = '__all__'

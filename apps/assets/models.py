@@ -343,7 +343,7 @@ class Components(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
     order_number = models.CharField(max_length=120)
-    item_number = models.CharField(max_length=120)
+    item_number = models.CharField(max_length=120,null=True, blank=True)
     model = models.ForeignKey(AssetModel, on_delete=models.CASCADE)
     manufacturer = models.ForeignKey(AssetManufacturer, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
@@ -372,6 +372,7 @@ class Components(models.Model):
 
 class ComponentCheckIn(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE,null=True, blank=True)
     user = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, null=True, blank=True
     )
@@ -390,6 +391,87 @@ class ComponentCheckIn(models.Model):
         verbose_name = "Component CheckIn"
         verbose_name_plural = "Component CheckIns"
         ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.component.name
+    
+
+
+class ComponentRequest(models.Model):
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    component = models.ForeignKey(Components, on_delete=models.CASCADE)
+    request_date = models.DateField()
+    user = models.ForeignKey("people.User",on_delete=models.CASCADE)
+    status = models.CharField(max_length=120,default="pending",choices=(("pending","Pending"),("approved","Approved"),("rejected","Rejected")))
+    note = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Component Request"
+        verbose_name_plural = "Component Requests"
+        ordering = ["-created_at"]
+
+
+class ComponentCheckOut(models.Model):
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    component_request = models.ForeignKey(
+        ComponentRequest, on_delete=models.CASCADE, null=True, blank=True
+    )
+    component = models.ForeignKey(Components, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        "people.User", on_delete=models.CASCADE, related_name="component_checkout_user"
+    )
+    checkout_by = models.ForeignKey(
+        "people.User",
+        on_delete=models.CASCADE,
+        related_name="component_checkout_checkout_by",
+    )
+    note = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Component CheckOut"
+        verbose_name_plural = "Component CheckOuts"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.component.name
+
+
+
+class AssetsHistory(models.Model):
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    user = models.ForeignKey("people.User", on_delete=models.CASCADE, related_name='asset_history_user')
+    action = models.CharField(max_length=120)
+    note = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Asset History'
+        verbose_name_plural = 'Asset Histories'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.asset.name
+    
+
+class ComponentHistory(models.Model):
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    component = models.ForeignKey(Components, on_delete=models.CASCADE)
+    user = models.ForeignKey("people.User", on_delete=models.CASCADE, related_name='component_history_user')
+    action = models.CharField(max_length=120)
+    note = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Component History'
+        verbose_name_plural = 'Component Histories'
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.component.name

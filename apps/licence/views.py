@@ -16,7 +16,8 @@ from apps.licence.models import (
   LicenseCategoryTypes,
   LicenseCategory,
   License,
-  LicenseCheckOut
+  LicenseCheckOut,
+    LicenseHistory,
 )
 
 from apps.licence.serializers import (
@@ -26,7 +27,9 @@ from apps.licence.serializers import (
     LicenseCreateUpdateSerializer,
     LicenseListSerializer,
     LicenseCheckOutCreateUpdateSerializer,
-    LicenseCheckOutListSerializer
+    LicenseCheckOutListSerializer,
+    LicenseHistoryCreateUpdateSerializer,
+    LicenseHistoryListSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -384,6 +387,8 @@ class LicenseCheckoutViewset(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
+            LicenseHistory.objects.create(license=lisc,user=user_data,action='checked_out')
+
             return Response({'success':True,'info':'License Checked out successfully'},status=status.HTTP_201_CREATED)
             
         
@@ -395,7 +400,73 @@ class LicenseCheckoutViewset(viewsets.ModelViewSet):
     
 
         
+class LicenseHistoryViewset(viewsets.ModelViewSet):
+    queryset = LicenseHistory.objects.all()
+    permission_classes = [TokenRequiredPermission]
+    lookup_field = 'uid'
+    pagination_class = FetchDataPagination
 
+    def get_serializer_class(self):
+        if self.action in ["create","update","partial_update"]:
+            return LicenseHistoryCreateUpdateSerializer
+        return LicenseHistoryListSerializer
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
+        )
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(
+            {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
+        )
+    
+    def create(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            license = data.get('license')
+            user = data.get('user')
+            action = data.get('action')
+            note = data.get('note')
+
+            if not license:
+                return Response({'success':False,'info':'license is required'},status=status.HTTP_400_BAD_REQUEST)
+            
+            if not user:
+                return Response({'success':False,'info':'user is required'},status=status.HTTP_400_BAD_REQUEST)
+            
+            if not action:
+                return Response({'success':False,'info':'action is required'},status=status.HTTP_400_BAD_REQUEST)
+            
+            lisc = License.objects.filter(id=license).first()
+            if not lisc:
+                return Response({'success':False,'info':'license cannot be found'},status=status.HTTP_400_BAD_REQUEST)
+            
+            user_data = User.objects.filter(id=user).first()
+
+            if not user_data:
+                Response({'success':False,'info':'User cannot be found'},status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            return Response({'success':True,'info':'License History Created successfully'},status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            logger.warning(str(e))
+            return Response(
+            {"success": True, "info": "An error occured whilst processing your request"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 

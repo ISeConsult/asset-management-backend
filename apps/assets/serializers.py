@@ -16,6 +16,8 @@ from apps.assets.models import (
     AssetCheckOut,
     Components,
     ComponentCheckIn,
+    ComponentCheckOut,
+    ComponentRequest,
 )
 from rest_framework import serializers
 from decouple import config
@@ -750,4 +752,102 @@ class ComponentCheckInListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ComponentCheckIn
+        fields = "__all__"
+
+
+
+class ComponentRequestCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComponentRequest
+        fields = "__all__"
+
+
+class ComponentRequestListSerializer(serializers.ModelSerializer):
+    location = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    component = serializers.SerializerMethodField()
+
+    def get_component(self, obj):
+        if obj.component:
+            return {
+                "id": obj.component.id,
+                "uid": obj.component.uid,
+                "name": obj.component.name,
+            }
+        else:
+            return None
+
+    def get_user(self, obj):
+        if obj.user:
+            return {
+                "id": obj.user.id,
+                "uid": obj.user.uid,
+                "full_name": f"{obj.user.first_name} {obj.user.last_name}",
+            }
+        else:
+            return None
+
+    def get_location(self, obj):
+        if obj.location:
+            return {
+                "id": obj.location.id,
+                "uid": obj.location.uid,
+                "location": obj.location.location_name,
+                "city": obj.location.city,
+                "country": obj.location.country,
+            }
+
+        else:
+            return None
+
+    class Meta:
+        model = ComponentRequest
+        fields = "__all__"
+
+
+class ComponentCheckOutCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComponentCheckOut
+        fields = "__all__"
+
+
+class ComponentCheckOutListSerializer(serializers.ModelSerializer):
+    component_request = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    checkout_by = serializers.SerializerMethodField()
+    component = serializers.SerializerMethodField()
+
+    def get_component(self, obj):
+        if obj.component:
+            return ComponentsListSerializer(obj.component).data
+        return None
+
+    def get_component_request(self, obj):
+        if obj.component_request:
+            return ComponentRequestListSerializer(obj.component_request).data
+        else:
+            return None
+
+    def get_user(self, obj):
+        if obj.user:
+            return {
+                "id": obj.user.id,
+                "uid": obj.user.uid,
+                "full_name": f"{obj.user.first_name} {obj.user.last_name}",
+            }
+        else:
+            return None
+
+    def get_checkout_by(self, obj):
+        if obj.checkout_by:
+            return {
+                "id": obj.checkout_by.id,
+                "uid": obj.checkout_by.uid,
+                "full_name": f"{obj.checkout_by.first_name} {obj.checkout_by.last_name}",
+            }
+        else:
+            return None
+
+    class Meta:
+        model = ComponentCheckOut
         fields = "__all__"

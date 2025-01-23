@@ -3,7 +3,8 @@ from apps.licence.models import (
   LicenseCategoryTypes,
   LicenseCategory,
   License,
-  LicenseCheckOut
+  LicenseCheckOut,
+  LicenseHistory
 )
 
 
@@ -18,7 +19,8 @@ class BaseAdmin(admin.ModelAdmin):
 LicenseCategoryTypes,
   LicenseCategory,
   License,
-  LicenseCheckOut
+  LicenseCheckOut,
+  LicenseHistory,
 )
 class AssetAdmin(BaseAdmin):
     pass
