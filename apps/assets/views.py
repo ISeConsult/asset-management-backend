@@ -1414,10 +1414,18 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
         try:
             data = request.data
             m_request = data.get("maintenace")
+            amount = data.get('amount')
 
             if not m_request:
                 return Response(
                     {"success": False, "info": "maintenance request not found"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+
+            if not amount:
+                return Response(
+                    {"success": False, "info": "amount not found"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -1439,7 +1447,8 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 )
 
             maintenance_request.asset.status = stat
-            maintenance_request.asset.save(update_fields=["status"])
+            maintenance_request.amount = amount
+            maintenance_request.asset.save(update_fields=["status","amount"])
 
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
