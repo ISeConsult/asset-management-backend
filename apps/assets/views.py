@@ -1413,12 +1413,12 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
     def return_from_maintenance(self, request, *args, **kwargs):
         try:
             data = request.data
-            m_request = data.get("maintenace")
+            m_request = data.get("maintenance")
             amount = data.get('amount')
 
             if not m_request:
                 return Response(
-                    {"success": False, "info": "maintenance request not found"},
+                    {"success": False, "info": "maintenance is required"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
