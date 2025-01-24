@@ -36,6 +36,7 @@ def upload_asset_status():
     
 
 
-upload_asset_status()
+# upload_asset_status()
 # upload_templates('templates')
+
 

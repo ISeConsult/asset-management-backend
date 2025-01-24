@@ -1413,6 +1413,7 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
     def return_from_maintenance(self, request, *args, **kwargs):
         try:
             data = request.data
+            print(f"request data {data}")
             m_request = data.get("maintenance")
             amount = data.get('amount')
 
@@ -1447,12 +1448,10 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 )
 
             maintenance_request.asset.status = stat
+            maintenance_request.asset.save(update_fields=["status"])
             maintenance_request.amount = amount
-            maintenance_request.asset.save(update_fields=["status","amount"])
-
-            serializer = self.get_serializer(data=data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+            maintenance_request.status = 'completed'
+            maintenance_request.save(update_fields=['amount','status'])
 
             return Response(
                 {"success": True, "info": "Maintenace request updated sucessfully"},
