@@ -11,7 +11,7 @@ from apps.assets.models import (
     AssetMaintenanceRequest,
     AssetReturn,
     AssetSupplier,
-    AssetStatus,
+    # AssetStatus,
     Company,
     AssetCheckOut,
     Components,
@@ -124,10 +124,10 @@ class AssetModelListSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AssetStatusSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AssetStatus
-        fields = "__all__"
+# class AssetStatusSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = AssetStatus
+#         fields = "__all__"
 
 
 class AssetLocationSerializer(serializers.ModelSerializer):
@@ -311,7 +311,7 @@ class AssetCreateUpdateSerializer(serializers.ModelSerializer):
 
 class AssetListSerializer(serializers.ModelSerializer):
     asset_model = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
+    # status = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
     category = serializers.SerializerMethodField()
     # company = serializers.SerializerMethodField()
@@ -325,12 +325,12 @@ class AssetListSerializer(serializers.ModelSerializer):
         else:
             return None
 
-    def get_status(self, obj):
-        if obj.status:
-            return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
+    # def get_status(self, obj):
+    #     if obj.status:
+    #         return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
 
-        else:
-            return None
+    #     else:
+    #         return None
 
     def get_current_assignee(self, obj):
         if obj.current_assignee:
@@ -449,7 +449,7 @@ class AssetCheckInCreateUpdateSerializer(serializers.ModelSerializer):
 
 class AssetCheckInListSerializer(serializers.ModelSerializer):
     asset = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
+    # status = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
 
@@ -484,12 +484,12 @@ class AssetCheckInListSerializer(serializers.ModelSerializer):
         else:
             return None
 
-    def get_status(self, obj):
-        if obj.status:
-            return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
+    # def get_status(self, obj):
+    #     if obj.status:
+    #         return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
 
-        else:
-            return None
+    #     else:
+    #         return None
 
     class Meta:
         model = AssetCheckIn
@@ -553,7 +553,7 @@ class AssetReturnCreateUpdateSerializer(serializers.ModelSerializer):
 class AssetReturnListSerializer(serializers.ModelSerializer):
     asset = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
+    # status = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
 
     def get_asset(self, obj):
@@ -583,12 +583,12 @@ class AssetReturnListSerializer(serializers.ModelSerializer):
         else:
             return None
 
-    def get_status(self, obj):
-        if obj.status:
-            return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
+    # def get_status(self, obj):
+    #     if obj.status:
+    #         return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
 
-        else:
-            return None
+    #     else:
+    #         return None
 
     class Meta:
         model = AssetReturn
@@ -650,7 +650,7 @@ class ComponentsListSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     company = serializers.SerializerMethodField()
     supplier = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
+    # status = serializers.SerializerMethodField()
 
     def get_model(self, obj):
         if obj.model:
@@ -688,12 +688,12 @@ class ComponentsListSerializer(serializers.ModelSerializer):
         else:
             return None
 
-    def get_status(self, obj):
-        if obj.status:
-            return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
+    # def get_status(self, obj):
+    #     if obj.status:
+    #         return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
 
-        else:
-            return None
+    #     else:
+    #         return None
 
     class Meta:
         model = Components
@@ -708,7 +708,7 @@ class ComponentCheckInCreateUpdateSerializer(serializers.ModelSerializer):
 
 class ComponentCheckInListSerializer(serializers.ModelSerializer):
     component = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
+    # status = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
 
@@ -743,12 +743,12 @@ class ComponentCheckInListSerializer(serializers.ModelSerializer):
         else:
             return None
 
-    def get_status(self, obj):
-        if obj.status:
-            return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
+    # def get_status(self, obj):
+    #     if obj.status:
+    #         return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
 
-        else:
-            return None
+    #     else:
+    #         return None
 
     class Meta:
         model = ComponentCheckIn

@@ -22,9 +22,8 @@ from apps.assets.models import (
     AssetRequest,
     AssetReturn,
     AssetSupplier,
-    AssetStatus,
     AssetModel,
-    AssetStatus,
+    # AssetStatus,
     AssetLocation,
     Company,
     AssetCheckIn,
@@ -58,7 +57,7 @@ from apps.assets.serializers import (
     AssetListSerializer,
     AssetRequestCreateUpdateSerializer,
     AssetRequestListSerializer,
-    AssetStatusSerializer,
+    # AssetStatusSerializer,
     AssetReturnCreateUpdateSerializer,
     AssetReturnListSerializer,
     CompanyListSerializer,
@@ -829,61 +828,61 @@ class AssetModelCategoryViewset(viewsets.ModelViewSet):
             )
 
 
-class AssetStatusViewSet(viewsets.ModelViewSet):
-    queryset = AssetStatus.objects.all()
-    serializer_class = AssetStatusSerializer
-    permission_classes = [TokenRequiredPermission]
-    lookup_field = "uid"
+# class AssetStatusViewSet(viewsets.ModelViewSet):
+#     queryset = AssetStatus.objects.all()
+#     serializer_class = AssetStatusSerializer
+#     permission_classes = [TokenRequiredPermission]
+#     lookup_field = "uid"
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(
-            {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
-        )
+#     def list(self, request, *args, **kwargs):
+#         queryset = self.filter_queryset(self.get_queryset())
+#         serializer = self.get_serializer(queryset, many=True)
+#         return Response(
+#             {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
+#         )
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(
-            {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
-        )
+#     def retrieve(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         serializer = self.get_serializer(instance)
+#         return Response(
+#             {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
+#         )
 
-    def create(self, request, *args, **kwargs):
-        data = request.data
-        name = data.get("name")
+#     def create(self, request, *args, **kwargs):
+#         data = request.data
+#         name = data.get("name")
 
-        if not name:
-            return Response(
-                {
-                    "success": False,
-                    "info": "name is required",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+#         if not name:
+#             return Response(
+#                 {
+#                     "success": False,
+#                     "info": "name is required",
+#                 },
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
 
-        if AssetStatus.objects.filter(name=name).exists():
-            return Response(
-                {
-                    "success": False,
-                    "info": "Asset status already exists",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+#         if AssetStatus.objects.filter(name=name).exists():
+#             return Response(
+#                 {
+#                     "success": False,
+#                     "info": "Asset status already exists",
+#                 },
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
 
-        serializer = self.get_serializer(data=data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(
-                {"success": True, "info": serializer.data},
-                status=status.HTTP_201_CREATED,
-            )
-        except Exception as e:
-            logger.warning(f"Error creating asset manufacturer: {str(e)}")
-            return Response(
-                {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
-            )
+#         serializer = self.get_serializer(data=data)
+#         try:
+#             serializer.is_valid(raise_exception=True)
+#             serializer.save()
+#             return Response(
+#                 {"success": True, "info": serializer.data},
+#                 status=status.HTTP_201_CREATED,
+#             )
+#         except Exception as e:
+#             logger.warning(f"Error creating asset manufacturer: {str(e)}")
+#             return Response(
+#                 {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
+#             )
 
 
 class AssetViewset(viewsets.ModelViewSet):
@@ -999,10 +998,6 @@ class AssetViewset(viewsets.ModelViewSet):
             )
 
         sup = AssetSupplier.objects.filter(id=supplier)
-
-        asset_status = AssetStatus.objects.filter(name="pending").first()
-
-        data["status"] = asset_status.id
 
         if not sup.exists():
             return Response(
@@ -1237,7 +1232,7 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            asset_request.status = "rejected"
+            asset_request.status = AssetRequest.AssetRequestStatus.REJECTED
             asset_request.note = note
             asset_request.save(update_fields=["status", "note"])
 
@@ -1377,13 +1372,8 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        stat = AssetStatus.objects.get(name="in_repair")
-        if not stat:
-            return Response(
-                {"success": False, "info": "status not found"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        stat = Asset.AssetStatus.IN_REPAIR
+        
         asset.status = stat
         asset.save(update_fields=["status"])
 
@@ -1440,17 +1430,12 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            stat = AssetStatus.objects.filter(name="checked_out").first()
-            if not stat:
-                return Response(
-                    {"success": False, "info": "Status not found"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-
+            stat = Asset.AssetStatus.CHECKED_OUT
+    
             maintenance_request.asset.status = stat
             maintenance_request.asset.save(update_fields=["status"])
             maintenance_request.amount = amount
-            maintenance_request.status = 'completed'
+            maintenance_request.status = AssetMaintenanceRequest.MaintenanceStatuses.COMPLETED  
             maintenance_request.save(update_fields=['amount','status'])
 
             return Response(
@@ -1639,12 +1624,7 @@ class AssetCheckInViewset(viewsets.ModelViewSet):
         data["checkin_date"] = arrow.now().date()
         data["user"] = request.user.id
 
-        asset_status = AssetStatus.objects.filter(name="checked_in").first()
-        if not asset_status:
-            return Response(
-                {"success": False, "info": "Asset status does not exist"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        asset_status = Asset.AssetStatus.CHECKED_IN
 
         asset.status = asset_status
         asset.save(update_fields=["status"])
@@ -1704,19 +1684,17 @@ class AssetCheckoutViewset(viewsets.ModelViewSet):
             try:
                 asset_request = AssetRequest.objects.get(id=asset_request_id)
                 asset = asset_request.asset
-                
             except AssetRequest.DoesNotExist:
                 return Response(
                     {"success": False, "info": "Asset request does not exist"},
                     status=status.HTTP_400_BAD_REQUEST,
-                )   
+                )
 
             data["asset"] = asset_request.asset.id
-            data['user'] = asset_request.user.id
+            data["user"] = asset_request.user.id
 
             # Ensure the asset is associated with the asset request
-            assets = asset_request.asset
-            if not assets:
+            if not asset_request.asset:
                 return Response(
                     {
                         "success": False,
@@ -1726,10 +1704,11 @@ class AssetCheckoutViewset(viewsets.ModelViewSet):
                 )
 
             # Update asset request status to approved
-            asset_request.status = "approved"
+            asset_request.status = AssetRequest.AssetRequestStatus.APPROVED
             asset_request.save(update_fields=["status"])
+            user = asset_request.user  # Assign user from asset request
         else:
-            # If no asset request, validate the asset is passed in the request body
+            # If no asset request, validate the asset and user in the request body
             if not asset_id:
                 return Response(
                     {
@@ -1738,7 +1717,7 @@ class AssetCheckoutViewset(viewsets.ModelViewSet):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            
+
             if not user_id:
                 return Response(
                     {"success": False, "info": "User ID is required"},
@@ -1748,36 +1727,33 @@ class AssetCheckoutViewset(viewsets.ModelViewSet):
             try:
                 asset = Asset.objects.get(id=asset_id)
                 data["asset"] = asset_id
-                data['user'] = user_id
             except Asset.DoesNotExist:
                 return Response(
                     {"success": False, "info": "Asset does not exist"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response(
-                {"success": False, "info": "User does not exist"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response(
+                    {"success": False, "info": "User does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        try:
-            asset_status = AssetStatus.objects.get(name="checked_out")
-        except AssetStatus.DoesNotExist:
-            return Response(
-                {"success": False, "info": "Asset status does not exist"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Get the checked-out asset status
+            asset_status = Asset.AssetStatus.CHECKED_OUT
 
+        # Update the asset's status and current assignee
         asset.status = asset_status
         asset.current_assignee = user
 
         with transaction.atomic():
+            # Save the asset with updated fields
             asset.save(update_fields=["status", "current_assignee"])
             data["checkout_by"] = request.user.id
 
+            # Serialize and save the checkout entry
             serializer = self.get_serializer(data=data)
 
             try:
@@ -1965,7 +1941,7 @@ class ComponentCheckInViewset(viewsets.ModelViewSet):
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            component_status = AssetStatus.objects.filter(name="checked_in").first()
+            component_status = Components.ComponentStatus.CHECKED_IN
 
             data["checkin_date"] = arrow.now().date()
             data['user'] = request.user.id
@@ -2126,7 +2102,7 @@ class ComponentCheckoutViewset(viewsets.ModelViewSet):
                 try:
                     component = Components.objects.get(id=component_id)
                     user = User.objects.get(id=user_id)
-                    component_status = AssetStatus.objects.get(name="checked_out")
+                    component_status = Components.ComponentStatus.CHECKED_OUT
 
                     component.status = component_status
                     component.current_assignee = user
@@ -2143,11 +2119,7 @@ class ComponentCheckoutViewset(viewsets.ModelViewSet):
                         {"success": False, "info": "User does not exist"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
-                except AssetStatus.DoesNotExist:
-                    return Response(
-                        {"success": False, "info": "Component status does not exist"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+
 
             with transaction.atomic():
                 # Save component updates if component is assigned

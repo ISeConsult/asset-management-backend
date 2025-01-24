@@ -1,6 +1,6 @@
 from django.db import models
 import uuid
-
+from django.utils.translation import gettext_lazy as t
 
 class AssetModelCategory(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -60,20 +60,20 @@ class AssetModel(models.Model):
         return self.name
 
 
-class AssetStatus(models.Model):
-    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    name = models.CharField(max_length=120)
-    note = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+# class AssetStatus(models.Model):
+#     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+#     name = models.CharField(max_length=120)
+#     note = models.TextField(null=True, blank=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        verbose_name = "Asset Status"
-        verbose_name_plural = "Asset Statuses"
-        ordering = ["-created_at"]
+#     class Meta:
+#         verbose_name = "Asset Status"
+#         verbose_name_plural = "Asset Statuses"
+#         ordering = ["-created_at"]
 
-    def __str__(self):
-        return self.name
+#     def __str__(self):
+#         return self.name
 
 
 class AssetLocation(models.Model):
@@ -179,12 +179,18 @@ class AssetSupplier(models.Model):
 
 
 class Asset(models.Model):
+    class AssetStatus(models.TextChoices):
+        PENDING = 'pending',t('Pending')
+        CHECKED_IN = 'checked_in',t('Checked In')
+        CHECKED_OUT = 'checked_out',t('Checked Out')
+        IN_REPAIR = 'in_repair',t('In Repair')
+
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
     asset_tag = models.CharField(max_length=120)
     serial_no = models.CharField(max_length=120)
     asset_model = models.ForeignKey(AssetModel, on_delete=models.CASCADE)
-    status = models.ForeignKey(AssetStatus, on_delete=models.CASCADE)
+    status = models.CharField(max_length=50,default=AssetStatus.PENDING,choices=AssetStatus.choices)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     category = models.ForeignKey(AssetCategory, on_delete=models.CASCADE)
     company = models.ForeignKey(
@@ -215,6 +221,11 @@ class Asset(models.Model):
 
 
 class AssetRequest(models.Model):
+    class AssetRequestStatus(models.TextChoices):
+        PENDING = 'pending',t('pending')
+        APPROVED = 'approved',t('Approved')
+        REJECTED = 'rejected',t('Rejected')
+    
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, null=True, blank=True)
     request_date = models.DateField()
@@ -227,7 +238,7 @@ class AssetRequest(models.Model):
     )
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     expected_checkin_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=120, default="pending")
+    status = models.CharField(max_length=120, default=AssetRequestStatus.PENDING,choices=AssetRequestStatus.choices)
     submitted_by = models.ForeignKey("people.User", on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -249,9 +260,7 @@ class AssetCheckIn(models.Model):
     )
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     name = models.CharField(max_length=120, null=True, blank=True)
-    status = models.ForeignKey(
-        AssetStatus, on_delete=models.CASCADE, null=True, blank=True
-    )
+    status = models.CharField(max_length=50, null=True, blank=True)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     checkin_date = models.DateField()
     note = models.TextField(null=True, blank=True)
@@ -303,7 +312,7 @@ class AssetReturn(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     user = models.ForeignKey("people.User", on_delete=models.CASCADE)
-    status = models.ForeignKey(AssetStatus, on_delete=models.CASCADE)
+    status = models.CharField(max_length=50, null=True, blank=True)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     return_date = models.DateField()
     note = models.TextField(null=True, blank=True)
@@ -320,12 +329,17 @@ class AssetReturn(models.Model):
 
 
 class AssetMaintenanceRequest(models.Model):
+    class MaintenanceStatuses(models.TextChoices):
+        PENDING = 'pending',t('Pending')
+        COMPLETED = 'completed',t('Completed')
+
+
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     user = models.ForeignKey("people.User", on_delete=models.CASCADE)
     request_date = models.DateField()
     amount = models.PositiveIntegerField(default=0)
-    status = models.CharField(max_length=120, default="pending")
+    status = models.CharField(max_length=120, default=MaintenanceStatuses.PENDING,choices=MaintenanceStatuses.choices)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -341,6 +355,14 @@ class AssetMaintenanceRequest(models.Model):
 
 
 class Components(models.Model):
+        
+    class ComponentStatus(models.TextChoices):
+        PENDING = 'pending',t('Pending')
+        CHECKED_IN = 'checked_in',t('Checked In')
+        CHECKED_OUT = 'checked_out',t('Checked Out')
+        IN_REPAIR = 'in_repair',t('In Repair')
+
+
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
     order_number = models.CharField(max_length=120)
@@ -356,7 +378,7 @@ class Components(models.Model):
     purchase_cost = models.PositiveIntegerField(default=0)
     image = models.ImageField(upload_to="components/", null=True, blank=True)
     purchase_date = models.DateField()
-    status = models.ForeignKey(AssetStatus, on_delete=models.CASCADE)
+    status = models.CharField(max_length=50,default=ComponentStatus.PENDING,choices=ComponentStatus.choices)
     supplier = models.ForeignKey(AssetSupplier, on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     current_assignee = models.ForeignKey(
@@ -379,9 +401,7 @@ class ComponentCheckIn(models.Model):
     )
     component = models.ForeignKey(Components, on_delete=models.CASCADE)
     name = models.CharField(max_length=120, null=True, blank=True)
-    status = models.ForeignKey(
-        AssetStatus, on_delete=models.CASCADE, null=True, blank=True
-    )
+    status = models.CharField(max_length=50,null=True,blank=True)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     checkin_date = models.DateField()
     note = models.TextField(null=True, blank=True)
