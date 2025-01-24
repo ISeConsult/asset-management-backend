@@ -1022,7 +1022,7 @@ class AssetViewset(viewsets.ModelViewSet):
     )
     def fetch_requestable_assets(self, request, *args, **kwargs):
         try:
-            assets = Asset.objects.filter(status__name="checked_in")
+            assets = Asset.objects.filter(status="checked_in")
 
             # if not assets.exists():
             #     return Response(
@@ -1100,7 +1100,7 @@ class AssetViewset(viewsets.ModelViewSet):
     )
     def fetched_checked_out_assets(self, request, *args, **kwargs):
         try:
-            assets = Asset.objects.filter(status__name="checked_out")
+            assets = Asset.objects.filter(status="checked_out")
 
             # if not assets.exists():
             #     return Response(
