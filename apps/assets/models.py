@@ -272,8 +272,8 @@ class AssetCheckIn(models.Model):
         verbose_name_plural = "Asset CheckIns"
         ordering = ["-created_at"]
 
-    def __str__(self):
-        return self.name
+    # def __str__(self):
+    #     return self.name
 
     # def save(self, *args, **kwargs):
     #     if self.status.name == "checked_in":

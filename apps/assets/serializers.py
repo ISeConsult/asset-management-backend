@@ -18,6 +18,7 @@ from apps.assets.models import (
     ComponentCheckIn,
     ComponentCheckOut,
     ComponentRequest,
+    AssetsHistory,
 )
 from rest_framework import serializers
 from decouple import config
@@ -851,3 +852,36 @@ class ComponentCheckOutListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ComponentCheckOut
         fields = "__all__"
+
+
+class AssetHistoryCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetsHistory
+        fields = '__all__'
+
+
+class AssetHistoryListSerializer(serializers.ModelSerializer):
+    asset = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+
+    def get_user(self,obj):
+        if obj.user:
+            return {
+                'id':obj.user.id,
+                'uid':obj.user.uid,
+                'full_name':f"{obj.user.first_name} {obj.user.last_name}"
+            }
+        
+        else:
+            return None
+        
+
+    def get_asset(self,obj):
+        if obj.asset:
+            return AssetListSerializer(obj.asset).data
+        else:
+            return None
+
+    class Meta:
+        model = AssetsHistory
+        fields = '__all__'
