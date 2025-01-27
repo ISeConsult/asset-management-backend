@@ -1898,6 +1898,29 @@ class ComponentsViewset(viewsets.ModelViewSet):
             return Response(
                 {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
+        
+    @action(detail=False,methods=['get'],permission_classes=[TokenRequiredPermission],url_path='requestable-components',pagination_class=FetchDataPagination)
+    def fetch_requestable_components(self,request,*args,**kwargs):
+        try:
+            components = Components.objects.filter(status='checked_in')
+
+            page = self.paginate_queryset(components)
+            if page is not None:
+                serializer = ComponentsListSerializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            # If pagination is not applied
+            serializer = ComponentsListSerializer(components, many=True)
+            return Response(
+                {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            logger.warning(str(e))
+            return Response(
+                {"success": False, "info": "An error occured whilst processing your request"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        
 
 
 class ComponentCheckInViewset(viewsets.ModelViewSet):
