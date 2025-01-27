@@ -19,6 +19,7 @@ from apps.assets.models import (
     ComponentCheckOut,
     ComponentRequest,
     AssetsHistory,
+    AssetAudit,
 )
 from rest_framework import serializers
 from decouple import config
@@ -885,3 +886,24 @@ class AssetHistoryListSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetsHistory
         fields = '__all__'
+
+
+class AssetAuditCreateUpdateViewset(serializers.ModelSerializer):
+    class Meta:
+        model = AssetAudit
+        fields = '__all__'
+
+
+class AssetAuditListViewset(serializers.ModelSerializer):
+    asset = serializers.SerializerMethodField()
+
+    def get_asset(self,obj):
+        if obj.asset:
+            return AssetListSerializer(obj.asset).data
+        else:
+            return None
+    class Meta:
+        model = AssetAudit
+        fields = '__all__'
+
+

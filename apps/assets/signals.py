@@ -7,6 +7,7 @@ from apps.assets.models import (
     AssetReturn,
     AssetMaintenanceRequest,
     AssetsHistory,
+    AssetAudit
 )
 from django.contrib.auth.models import User
 import logging
@@ -30,6 +31,7 @@ def create_asset_history(action, instance, user):
 @receiver(post_save, sender=AssetReturn)
 @receiver(post_save, sender=AssetMaintenanceRequest)
 @receiver(post_save, sender=AssetRequest)
+@receiver(post_save,sender=AssetAudit)
 def asset_save_handler(sender, instance, created, **kwargs):
     try:
         action_mapping = {
@@ -38,6 +40,7 @@ def asset_save_handler(sender, instance, created, **kwargs):
             AssetReturn: 'return',
             AssetMaintenanceRequest: 'maintenance_request',
             AssetRequest: 'request',
+            AssetAudit :'audit'
         }
 
         action = action_mapping.get(sender)

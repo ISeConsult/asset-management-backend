@@ -33,6 +33,7 @@ from apps.assets.models import (
     ComponentRequest,
     ComponentCheckOut,
     AssetsHistory,
+    AssetAudit,
 )
 from apps.assets.serializers import (
     AssetCategoryCreateUpdateSerializer,
@@ -72,6 +73,8 @@ from apps.assets.serializers import (
     ComponentRequestListSerializer,
     AssetHistoryCreateUpdateSerializer,
     AssetHistoryListSerializer,
+    AssetAuditCreateUpdateViewset,
+    AssetAuditListViewset,
 )
 from apps.people.serializers import UserListSerializer
 from django.db import transaction
@@ -504,7 +507,7 @@ class AssetLocationViewset(viewsets.ModelViewSet):
 class AssetHistoryViewset(viewsets.ModelViewSet):
     queryset = AssetsHistory.objects.all()
     permission_classes = [TokenRequiredPermission]
-    lookup_field = 'uid'
+    lookup_field = 'asset.uid'
     pagination_class = FetchDataPagination
 
 
@@ -890,65 +893,10 @@ class AssetModelCategoryViewset(viewsets.ModelViewSet):
         except Exception as e:
             logger.warning(f"Error creating asset manufacturer: {str(e)}")
             return Response(
-                {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
+                {"success": False, "info": "An error Ocurred whilst processing your request"}, status=status.HTTP_400_BAD_REQUEST
             )
 
 
-# class AssetStatusViewSet(viewsets.ModelViewSet):
-#     queryset = AssetStatus.objects.all()
-#     serializer_class = AssetStatusSerializer
-#     permission_classes = [TokenRequiredPermission]
-#     lookup_field = "uid"
-
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.filter_queryset(self.get_queryset())
-#         serializer = self.get_serializer(queryset, many=True)
-#         return Response(
-#             {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
-#         )
-
-#     def retrieve(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         serializer = self.get_serializer(instance)
-#         return Response(
-#             {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
-#         )
-
-#     def create(self, request, *args, **kwargs):
-#         data = request.data
-#         name = data.get("name")
-
-#         if not name:
-#             return Response(
-#                 {
-#                     "success": False,
-#                     "info": "name is required",
-#                 },
-#                 status=status.HTTP_400_BAD_REQUEST,
-#             )
-
-#         if AssetStatus.objects.filter(name=name).exists():
-#             return Response(
-#                 {
-#                     "success": False,
-#                     "info": "Asset status already exists",
-#                 },
-#                 status=status.HTTP_400_BAD_REQUEST,
-#             )
-
-#         serializer = self.get_serializer(data=data)
-#         try:
-#             serializer.is_valid(raise_exception=True)
-#             serializer.save()
-#             return Response(
-#                 {"success": True, "info": serializer.data},
-#                 status=status.HTTP_201_CREATED,
-#             )
-#         except Exception as e:
-#             logger.warning(f"Error creating asset manufacturer: {str(e)}")
-#             return Response(
-#                 {"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST
-#             )
 
 
 class AssetViewset(viewsets.ModelViewSet):
@@ -1193,6 +1141,66 @@ class AssetViewset(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class AssetAuditViewset(viewsets.ModelViewSet):
+    queryset = AssetAudit.objects.all()
+    permission_classes = [TokenRequiredPermission]
+    lookup_field = 'uid'
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return AssetAuditCreateUpdateViewset
+        return AssetAuditListViewset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(
+            {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
+        )
+
+    def create(self, request, *args, **kwargs):
+        try:
+            data = request.data
+
+            asset = data.get('asset')
+            note = data.get('note')
+
+            if not asset:
+                return Response({"success":False,"info":"asset id is required"},status=status.HTTP_400_BAD_REQUEST)
+            
+            if not note:
+                return Response({"success":False,"info":"note is required"},status=status.HTTP_400_BAD_REQUEST)
+            
+            asset_data = Asset.objects.filter(id=asset).first()
+
+            if not asset_data:
+                return Response({"success":False,"info":"asset not found"},status=status.HTTP_404_NOT_FOUND)
+            
+
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            return Response({"suceess":True,"info":"Asset Audit saved successfully"},status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.warning(str(e))
+            return Response(
+                {"success": False, "info": "An error Ocurred whilst processing your request"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+    
+
+
 
 
 class AssetRequestViewSet(viewsets.ModelViewSet):

@@ -60,20 +60,6 @@ class AssetModel(models.Model):
         return self.name
 
 
-# class AssetStatus(models.Model):
-#     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-#     name = models.CharField(max_length=120)
-#     note = models.TextField(null=True, blank=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     class Meta:
-#         verbose_name = "Asset Status"
-#         verbose_name_plural = "Asset Statuses"
-#         ordering = ["-created_at"]
-
-#     def __str__(self):
-#         return self.name
 
 
 class AssetLocation(models.Model):
@@ -352,6 +338,26 @@ class AssetMaintenanceRequest(models.Model):
 
     def __str__(self):
         return self.asset.name
+
+
+class AssetAudit(models.Model):
+    class AuditStatus(models.TextChoices):
+        PENDING = 'pending',t('Pending')
+        COMPLETED = 'completed',t('Completed')
+
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    asset = models.ForeignKey(Asset,on_delete=models.CASCADE)
+    status = models.CharField(max_length=50,default=AuditStatus.PENDING,choices=AuditStatus.choices)
+    note = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Asset Audit'
+        verbose_name_plural = 'Audit Audits'
+        ordering = ['-created_at']
+
+
 
 
 class Components(models.Model):
