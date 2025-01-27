@@ -1178,7 +1178,7 @@ class AssetRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if asset.current_assignee or asset.status.name == "checked_out":
+        if asset.current_assignee or asset.status == "checked_out":
             return Response(
                 {"success": False, "info": "Asset already assigned"},
                 status=status.HTTP_400_BAD_REQUEST,
