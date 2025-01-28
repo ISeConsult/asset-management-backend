@@ -507,7 +507,7 @@ class AssetLocationViewset(viewsets.ModelViewSet):
 class AssetHistoryViewset(viewsets.ModelViewSet):
     queryset = AssetsHistory.objects.all()
     permission_classes = [TokenRequiredPermission]
-    lookup_field = 'asset.uid'
+    lookup_field = 'asset__uid'
     pagination_class = FetchDataPagination
 
 
