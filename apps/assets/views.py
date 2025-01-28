@@ -1821,7 +1821,7 @@ class AssetCheckoutViewset(viewsets.ModelViewSet):
                 )
 
         # Get the checked-out asset status
-            asset_status = Asset.AssetStatus.CHECKED_OUT
+        asset_status = Asset.AssetStatus.CHECKED_OUT
 
         # Update the asset's status and current assignee
         asset.status = asset_status
