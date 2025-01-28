@@ -20,6 +20,7 @@ from apps.assets.models import (
     ComponentCheckIn,
     ComponentCheckOut,
     ComponentRequest,
+    AssetAudit
 )
 
 
@@ -51,6 +52,7 @@ class BaseAdmin(admin.ModelAdmin):
     ComponentRequest,
     AssetsHistory,
     ComponentHistory,
+    AssetAudit,
 )
 class AssetAdmin(BaseAdmin):
     pass
