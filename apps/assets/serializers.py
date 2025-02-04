@@ -450,6 +450,7 @@ class AssetCheckInCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class AssetCheckInListSerializer(serializers.ModelSerializer):
+    asset = serializers.SerializerMethodField()
     # status = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
@@ -464,6 +465,16 @@ class AssetCheckInListSerializer(serializers.ModelSerializer):
         else:
             return None
 
+    def get_asset(self, obj):
+        if obj.asset:
+            return {
+                "id": obj.asset.id,
+                "uid": obj.asset.uid,
+                "name": obj.asset.name,
+            }
+        else:
+            return None
+
     def get_location(self, obj):
         if obj.location:
             return {
@@ -474,6 +485,13 @@ class AssetCheckInListSerializer(serializers.ModelSerializer):
 
         else:
             return None
+
+    # def get_status(self, obj):
+    #     if obj.status:
+    #         return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
+
+    #     else:
+    #         return None
 
     class Meta:
         model = AssetCheckIn

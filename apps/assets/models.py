@@ -249,7 +249,7 @@ class AssetCheckIn(models.Model):
     user = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, null=True, blank=True
     )
-    # asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     name = models.CharField(max_length=120, null=True, blank=True)
     status = models.CharField(max_length=50, null=True, blank=True)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)

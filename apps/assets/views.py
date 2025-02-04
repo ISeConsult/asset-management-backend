@@ -2,7 +2,7 @@ import datetime
 import logging
 import arrow
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import action
+from rest_framework.decorators import action,api_view
 from rest_framework import viewsets, status, permissions,generics
 from rest_framework.response import Response
 from django.db import transaction
@@ -2311,4 +2311,19 @@ class ComponentCheckoutViewset(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
+@api_view(['GET'])
+def main_dashboard_breakdown(request):
+    try:
+        pass
+
+    except Exception as e:
+        logger.warning(str(e))
+        return Response(
+                {
+                    "success": False,
+                    "info": "An error occurred while processing your request",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
