@@ -652,7 +652,8 @@ class ComponentsListSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     company = serializers.SerializerMethodField()
     supplier = serializers.SerializerMethodField()
-    # status = serializers.SerializerMethodField()
+    current_assignee = serializers.SerializerMethodField()
+    checked_asset = serializers.SerializerMethodField()
 
     def get_model(self, obj):
         if obj.model:
@@ -690,12 +691,21 @@ class ComponentsListSerializer(serializers.ModelSerializer):
         else:
             return None
 
-    # def get_status(self, obj):
-    #     if obj.status:
-    #         return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
+    def get_current_assignee(self, obj):
+        if obj.current_assignee:
+            return {
+                "id": obj.current_assignee.id,
+                "uid": obj.current_assignee.uid,
+                "full_name": f"{obj.current_assignee.first_name} {obj.current_assignee.last_name}",
+            }
+        else:
+            return None
 
-    #     else:
-    #         return None
+    def get_checked_asset(self, obj):
+        if obj.checked_asset:
+            return AssetListSerializer(obj.checked_asset).data
+        else:
+            return None
 
     class Meta:
         model = Components
@@ -710,7 +720,6 @@ class ComponentCheckInCreateUpdateSerializer(serializers.ModelSerializer):
 
 class ComponentCheckInListSerializer(serializers.ModelSerializer):
     component = serializers.SerializerMethodField()
-    # status = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
 
@@ -745,17 +754,9 @@ class ComponentCheckInListSerializer(serializers.ModelSerializer):
         else:
             return None
 
-    # def get_status(self, obj):
-    #     if obj.status:
-    #         return {"id": obj.status.id, "uid": obj.status.uid, "name": obj.status.name}
-
-    #     else:
-    #         return None
-
     class Meta:
         model = ComponentCheckIn
         fields = "__all__"
-
 
 
 class ComponentRequestCreateUpdateSerializer(serializers.ModelSerializer):
@@ -816,6 +817,7 @@ class ComponentCheckOutCreateUpdateSerializer(serializers.ModelSerializer):
 class ComponentCheckOutListSerializer(serializers.ModelSerializer):
     component_request = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    asset = serializers.SerializerMethodField()
     checkout_by = serializers.SerializerMethodField()
     component = serializers.SerializerMethodField()
 
@@ -840,6 +842,12 @@ class ComponentCheckOutListSerializer(serializers.ModelSerializer):
         else:
             return None
 
+    def get_asset(self, obj):
+        if obj.asset:
+            return AssetListSerializer(obj.asset).data
+        else:
+            return None
+
     def get_checkout_by(self, obj):
         if obj.checkout_by:
             return {
@@ -858,26 +866,25 @@ class ComponentCheckOutListSerializer(serializers.ModelSerializer):
 class AssetHistoryCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetsHistory
-        fields = '__all__'
+        fields = "__all__"
 
 
 class AssetHistoryListSerializer(serializers.ModelSerializer):
     asset = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
 
-    def get_user(self,obj):
+    def get_user(self, obj):
         if obj.user:
             return {
-                'id':obj.user.id,
-                'uid':obj.user.uid,
-                'full_name':f"{obj.user.first_name} {obj.user.last_name}"
+                "id": obj.user.id,
+                "uid": obj.user.uid,
+                "full_name": f"{obj.user.first_name} {obj.user.last_name}",
             }
-        
+
         else:
             return None
-        
 
-    def get_asset(self,obj):
+    def get_asset(self, obj):
         if obj.asset:
             return AssetListSerializer(obj.asset).data
         else:
@@ -885,25 +892,24 @@ class AssetHistoryListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AssetsHistory
-        fields = '__all__'
+        fields = "__all__"
 
 
 class AssetAuditCreateUpdateViewset(serializers.ModelSerializer):
     class Meta:
         model = AssetAudit
-        fields = '__all__'
+        fields = "__all__"
 
 
 class AssetAuditListViewset(serializers.ModelSerializer):
     asset = serializers.SerializerMethodField()
 
-    def get_asset(self,obj):
+    def get_asset(self, obj):
         if obj.asset:
             return AssetListSerializer(obj.asset).data
         else:
             return None
+
     class Meta:
         model = AssetAudit
-        fields = '__all__'
-
-
+        fields = "__all__"

@@ -48,8 +48,8 @@ router.register(r"asset-return", AssetReturnViewSet, basename="asset-return")
 router.register(
     r"maitenance-request", MaintenanceRequestViewSet, basename="maintenance-request"
 )
-router.register(r"asset-audit",AssetAuditViewset,basename='asset-audit')
-router.register(r"asset-history",AssetHistoryViewset,basename='asset-history')
+router.register(r"asset-audit", AssetAuditViewset, basename="asset-audit")
+router.register(r"asset-history", AssetHistoryViewset, basename="asset-history")
 router.register(r"asset-supplier", AssetSupplierViewSet, "asset-supplier")
 router.register(r"components", ComponentsViewset, "components")
 router.register(r"component-check-in", ComponentCheckInViewset, "component-check-in")

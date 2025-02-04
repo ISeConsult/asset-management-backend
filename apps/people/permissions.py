@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission,SAFE_METHODS
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.exceptions import PermissionDenied
 import jwt
 import arrow
@@ -49,7 +49,6 @@ class TokenRequiredPermission(BasePermission):
         return True
 
 
-
 """
 this permission class should follow said procedures as below
 
@@ -72,18 +71,18 @@ Locations
 3. Superadmins should see all assets in all locations
 4. Users should only see their own requests in their location
 """
-        
-        
+
 
 ROLE_SUPERADMIN = "superadmin"
 ROLE_ADMIN = "admin"
 ROLE_USER = "user"
 
+
 class AdminCheckPermission(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return request.user.is_authenticated
-        
+
         role_permissions = {
             ROLE_SUPERADMIN: True,  # Full access
             ROLE_ADMIN: request.method != "DELETE",
@@ -98,19 +97,29 @@ class AdminCheckPermission(BasePermission):
 
         if role_name == ROLE_SUPERADMIN:
             return True
-        
+
         if role_name == ROLE_ADMIN:
             return request.method != "DELETE"
-        
+
         if role_name == ROLE_USER:
             allowed_methods = ["GET", "PUT", "PATCH"]
-            if model.__name__ in ["AssetRequests", "AssetCheckOut", "AssetReturn", "AssetMaintenanceRequest"]:
-                return getattr(obj, "user", None) == request.user and request.method in allowed_methods
+            if model.__name__ in [
+                "AssetRequests",
+                "AssetCheckOut",
+                "AssetReturn",
+                "AssetMaintenanceRequest",
+            ]:
+                return (
+                    getattr(obj, "user", None) == request.user
+                    and request.method in allowed_methods
+                )
 
-            return getattr(obj, "owner", None) == request.user and request.method in allowed_methods
-        
+            return (
+                getattr(obj, "owner", None) == request.user
+                and request.method in allowed_methods
+            )
+
         return False
-
 
 
 # class AdminCheckPermission(BasePermission):
@@ -122,7 +131,7 @@ class AdminCheckPermission(BasePermission):
 #         # Define permission rules
 #         if request.user.role.name == "superadmin":
 #             return True  # Full access
-        
+
 #         if request.user.role.name == "admin":
 #             # Allow everything except DELETE
 #             return request.method != "DELETE"

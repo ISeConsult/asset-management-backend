@@ -41,32 +41,37 @@ class DepartmentListSerializer(serializers.ModelSerializer):
         if assets:
             return assets.count()
         return 0
-    
-    def get_licenses(self,obj):
+
+    def get_licenses(self, obj):
         licenses = License.objects.filter(licensed_to__department__id=obj.id)
         if licenses:
             return licenses.count()
         return 0
-        
-    def get_consumables(self,obj):
-        consumable = Asset.objects.filter(current_assignee__department__id=obj.id,category__asset_type__name='consumables')
+
+    def get_consumables(self, obj):
+        consumable = Asset.objects.filter(
+            current_assignee__department__id=obj.id,
+            category__asset_type__name="consumables",
+        )
         if consumable:
             return consumable.count()
         return 0
-    
-    def get_accessories(self,obj):
-        accessory = Asset.objects.filter(current_assignee__department__id=obj.id,category__asset_type__name='accessories')
+
+    def get_accessories(self, obj):
+        accessory = Asset.objects.filter(
+            current_assignee__department__id=obj.id,
+            category__asset_type__name="accessories",
+        )
         if accessory:
             return accessory.count()
         return 0
-
 
     def get_total_users(self, obj):
         users = User.objects.filter(department=obj)
         if users:
             return users.count()
         return 0
-    
+
     def get_manager(self, obj):
         if obj.manager:
             return {
@@ -77,11 +82,11 @@ class DepartmentListSerializer(serializers.ModelSerializer):
             }
 
         return None
-    
+
     def get_image(self, obj):
         if obj.image:
             return config("BASE_URL") + obj.image.url
-    
+
     def get_company(self, obj):
         if obj.company:
             return {
@@ -91,7 +96,7 @@ class DepartmentListSerializer(serializers.ModelSerializer):
             }
 
         return None
-    
+
     def get_location(self, obj):
         if obj.location:
             return {
@@ -127,11 +132,11 @@ class UserListSerializer(serializers.ModelSerializer):
     accessories = serializers.SerializerMethodField()
     components = serializers.SerializerMethodField()
 
-    def get_components(self,obj):
+    def get_components(self, obj):
         components = Components.objects.filter(current_assignee=obj)
         if components:
             return components.count()
-        
+
     def get_image(self, obj):
         if obj.image:
             return config("BASE_URL") + obj.image.url
@@ -141,26 +146,28 @@ class UserListSerializer(serializers.ModelSerializer):
         if assets:
             return assets.count()
         return 0
-    
-    def get_licenses(self,obj):
+
+    def get_licenses(self, obj):
         licenses = License.objects.filter(licensed_to=obj)
         if licenses:
             return licenses.count()
         return 0
-        
-    def get_consumables(self,obj):
-        consumable = Asset.objects.filter(current_assignee=obj,category__name='consumables')
+
+    def get_consumables(self, obj):
+        consumable = Asset.objects.filter(
+            current_assignee=obj, category__name="consumables"
+        )
         if consumable:
             return consumable.count()
         return 0
-    
-    def get_accessories(self,obj):
-        accessory = Asset.objects.filter(current_assignee=obj,category__name='accessories')
+
+    def get_accessories(self, obj):
+        accessory = Asset.objects.filter(
+            current_assignee=obj, category__name="accessories"
+        )
         if accessory:
             return accessory.count()
         return 0
-
-    
 
     def get_assigned_assets(self, obj):
         # Get all asset assignments for the user
