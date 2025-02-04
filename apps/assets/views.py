@@ -1920,7 +1920,6 @@ class ComponentsViewset(viewsets.ModelViewSet):
         manufacturer = data.get("manufacturer")
         model = data.get("model")
         location = data.get("location")
-        component_status = data.get("status")
         purchase_date = data.get("purchase_date")
         purchase_cost = data.get("purchase_cost")
         supplier = data.get("supplier")
@@ -1962,11 +1961,6 @@ class ComponentsViewset(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not component_status:
-            return Response(
-                {"success": False, "info": "status is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
         if not purchase_date:
             return Response(
