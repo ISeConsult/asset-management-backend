@@ -428,7 +428,7 @@ class LicenseCheckoutViewset(viewsets.ModelViewSet):
 class LicenseHistoryViewset(viewsets.ModelViewSet):
     queryset = LicenseHistory.objects.all()
     permission_classes = [TokenRequiredPermission]
-    lookup_field = "uid"
+    lookup_field = "license__uid"
     pagination_class = FetchDataPagination
 
     def get_serializer_class(self):
