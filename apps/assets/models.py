@@ -2,6 +2,7 @@ from django.db import models
 import uuid
 from django.utils.translation import gettext_lazy as t
 
+
 class AssetModelCategory(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
@@ -58,8 +59,6 @@ class AssetModel(models.Model):
 
     def __str__(self):
         return self.name
-
-
 
 
 class AssetLocation(models.Model):
@@ -166,17 +165,19 @@ class AssetSupplier(models.Model):
 
 class Asset(models.Model):
     class AssetStatus(models.TextChoices):
-        PENDING = 'pending',t('Pending')
-        CHECKED_IN = 'checked_in',t('Checked In')
-        CHECKED_OUT = 'checked_out',t('Checked Out')
-        IN_REPAIR = 'in_repair',t('In Repair')
+        PENDING = "pending", t("Pending")
+        CHECKED_IN = "checked_in", t("Checked In")
+        CHECKED_OUT = "checked_out", t("Checked Out")
+        IN_REPAIR = "in_repair", t("In Repair")
 
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
     asset_tag = models.CharField(max_length=120)
     serial_no = models.CharField(max_length=120)
     asset_model = models.ForeignKey(AssetModel, on_delete=models.CASCADE)
-    status = models.CharField(max_length=50,default=AssetStatus.PENDING,choices=AssetStatus.choices)
+    status = models.CharField(
+        max_length=50, default=AssetStatus.PENDING, choices=AssetStatus.choices
+    )
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     category = models.ForeignKey(AssetCategory, on_delete=models.CASCADE)
     company = models.ForeignKey(
@@ -208,10 +209,10 @@ class Asset(models.Model):
 
 class AssetRequest(models.Model):
     class AssetRequestStatus(models.TextChoices):
-        PENDING = 'pending',t('pending')
-        APPROVED = 'approved',t('Approved')
-        REJECTED = 'rejected',t('Rejected')
-    
+        PENDING = "pending", t("pending")
+        APPROVED = "approved", t("Approved")
+        REJECTED = "rejected", t("Rejected")
+
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, null=True, blank=True)
     request_date = models.DateField()
@@ -224,7 +225,11 @@ class AssetRequest(models.Model):
     )
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     expected_checkin_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=120, default=AssetRequestStatus.PENDING,choices=AssetRequestStatus.choices)
+    status = models.CharField(
+        max_length=120,
+        default=AssetRequestStatus.PENDING,
+        choices=AssetRequestStatus.choices,
+    )
     submitted_by = models.ForeignKey("people.User", on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -244,7 +249,7 @@ class AssetCheckIn(models.Model):
     user = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, null=True, blank=True
     )
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    # asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     name = models.CharField(max_length=120, null=True, blank=True)
     status = models.CharField(max_length=50, null=True, blank=True)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
@@ -316,16 +321,19 @@ class AssetReturn(models.Model):
 
 class AssetMaintenanceRequest(models.Model):
     class MaintenanceStatuses(models.TextChoices):
-        PENDING = 'pending',t('Pending')
-        COMPLETED = 'completed',t('Completed')
-
+        PENDING = "pending", t("Pending")
+        COMPLETED = "completed", t("Completed")
 
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     user = models.ForeignKey("people.User", on_delete=models.CASCADE)
     request_date = models.DateField()
     amount = models.PositiveIntegerField(default=0)
-    status = models.CharField(max_length=120, default=MaintenanceStatuses.PENDING,choices=MaintenanceStatuses.choices)
+    status = models.CharField(
+        max_length=120,
+        default=MaintenanceStatuses.PENDING,
+        choices=MaintenanceStatuses.choices,
+    )
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -342,37 +350,36 @@ class AssetMaintenanceRequest(models.Model):
 
 class AssetAudit(models.Model):
     class AuditStatus(models.TextChoices):
-        PENDING = 'pending',t('Pending')
-        COMPLETED = 'completed',t('Completed')
+        PENDING = "pending", t("Pending")
+        COMPLETED = "completed", t("Completed")
 
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    asset = models.ForeignKey(Asset,on_delete=models.CASCADE)
-    status = models.CharField(max_length=50,default=AuditStatus.PENDING,choices=AuditStatus.choices)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=50, default=AuditStatus.PENDING, choices=AuditStatus.choices
+    )
     note = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Asset Audit'
-        verbose_name_plural = 'Audit Audits'
-        ordering = ['-created_at']
-
-
+        verbose_name = "Asset Audit"
+        verbose_name_plural = "Audit Audits"
+        ordering = ["-created_at"]
 
 
 class Components(models.Model):
-        
-    class ComponentStatus(models.TextChoices):
-        PENDING = 'pending',t('Pending')
-        CHECKED_IN = 'checked_in',t('Checked In')
-        CHECKED_OUT = 'checked_out',t('Checked Out')
-        IN_REPAIR = 'in_repair',t('In Repair')
 
+    class ComponentStatus(models.TextChoices):
+        PENDING = "pending", t("Pending")
+        CHECKED_IN = "checked_in", t("Checked In")
+        CHECKED_OUT = "checked_out", t("Checked Out")
+        IN_REPAIR = "in_repair", t("In Repair")
 
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=120)
     order_number = models.CharField(max_length=120)
-    item_number = models.CharField(max_length=120,null=True, blank=True)
+    item_number = models.CharField(max_length=120, null=True, blank=True)
     model = models.ForeignKey(AssetModel, on_delete=models.CASCADE)
     manufacturer = models.ForeignKey(AssetManufacturer, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
@@ -384,11 +391,16 @@ class Components(models.Model):
     purchase_cost = models.PositiveIntegerField(default=0)
     image = models.ImageField(upload_to="components/", null=True, blank=True)
     purchase_date = models.DateField()
-    status = models.CharField(max_length=50,default=ComponentStatus.PENDING,choices=ComponentStatus.choices)
+    status = models.CharField(
+        max_length=50, default=ComponentStatus.PENDING, choices=ComponentStatus.choices
+    )
     supplier = models.ForeignKey(AssetSupplier, on_delete=models.CASCADE)
     note = models.TextField(null=True, blank=True)
     current_assignee = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, null=True, blank=True
+    )
+    checked_asset = models.ForeignKey(
+        Asset, on_delete=models.CASCADE, null=True, blank=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -401,13 +413,13 @@ class Components(models.Model):
 
 class ComponentCheckIn(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE,null=True, blank=True)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, null=True, blank=True
     )
     component = models.ForeignKey(Components, on_delete=models.CASCADE)
     name = models.CharField(max_length=120, null=True, blank=True)
-    status = models.CharField(max_length=50,null=True,blank=True)
+    status = models.CharField(max_length=50, null=True, blank=True)
     location = models.ForeignKey(AssetLocation, on_delete=models.CASCADE)
     checkin_date = models.DateField()
     note = models.TextField(null=True, blank=True)
@@ -421,15 +433,22 @@ class ComponentCheckIn(models.Model):
 
     def __str__(self):
         return self.component.name
-    
 
 
 class ComponentRequest(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     component = models.ForeignKey(Components, on_delete=models.CASCADE)
     request_date = models.DateField()
-    user = models.ForeignKey("people.User",on_delete=models.CASCADE)
-    status = models.CharField(max_length=120,default="pending",choices=(("pending","Pending"),("approved","Approved"),("rejected","Rejected")))
+    user = models.ForeignKey("people.User", on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=120,
+        default="pending",
+        choices=(
+            ("pending", "Pending"),
+            ("approved", "Approved"),
+            ("rejected", "Rejected"),
+        ),
+    )
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -446,6 +465,7 @@ class ComponentCheckOut(models.Model):
         ComponentRequest, on_delete=models.CASCADE, null=True, blank=True
     )
     component = models.ForeignKey(Components, on_delete=models.CASCADE)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(
         "people.User", on_delete=models.CASCADE, related_name="component_checkout_user"
     )
@@ -467,38 +487,41 @@ class ComponentCheckOut(models.Model):
         return self.component.name
 
 
-
 class AssetsHistory(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
-    user = models.ForeignKey("people.User", on_delete=models.CASCADE, related_name='asset_history_user')
+    user = models.ForeignKey(
+        "people.User", on_delete=models.CASCADE, related_name="asset_history_user"
+    )
     action = models.CharField(max_length=120)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Asset History'
-        verbose_name_plural = 'Asset Histories'
-        ordering = ['-created_at']
+        verbose_name = "Asset History"
+        verbose_name_plural = "Asset Histories"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.asset.name
-    
+
 
 class ComponentHistory(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     component = models.ForeignKey(Components, on_delete=models.CASCADE)
-    user = models.ForeignKey("people.User", on_delete=models.CASCADE, related_name='component_history_user')
+    user = models.ForeignKey(
+        "people.User", on_delete=models.CASCADE, related_name="component_history_user"
+    )
     action = models.CharField(max_length=120)
     note = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Component History'
-        verbose_name_plural = 'Component Histories'
-        ordering = ['-created_at']
+        verbose_name = "Component History"
+        verbose_name_plural = "Component Histories"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.component.name

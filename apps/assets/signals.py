@@ -7,23 +7,25 @@ from apps.assets.models import (
     AssetReturn,
     AssetMaintenanceRequest,
     AssetsHistory,
-    AssetAudit
+    AssetAudit,
 )
 from django.contrib.auth.models import User
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 # Utility function to create asset history
 def create_asset_history(action, instance, user):
     try:
         AssetsHistory.objects.create(
-            asset=getattr(instance, 'asset', None),
+            asset=getattr(instance, "asset", None),
             user=user,
             action=action,
         )
     except Exception as e:
         logger.warning(f"Failed to create asset history: {str(e)}")
+
 
 # Generic signal handler
 @receiver(post_save, sender=AssetCheckIn)
@@ -31,16 +33,16 @@ def create_asset_history(action, instance, user):
 @receiver(post_save, sender=AssetReturn)
 @receiver(post_save, sender=AssetMaintenanceRequest)
 @receiver(post_save, sender=AssetRequest)
-@receiver(post_save,sender=AssetAudit)
+@receiver(post_save, sender=AssetAudit)
 def asset_save_handler(sender, instance, created, **kwargs):
     try:
         action_mapping = {
-            AssetCheckIn: 'check_in',
-            AssetCheckOut: 'check_out',
-            AssetReturn: 'return',
-            AssetMaintenanceRequest: 'maintenance_request',
-            AssetRequest: 'request',
-            AssetAudit :'audit'
+            AssetCheckIn: "check_in",
+            AssetCheckOut: "check_out",
+            AssetReturn: "return",
+            AssetMaintenanceRequest: "maintenance_request",
+            AssetRequest: "request",
+            AssetAudit: "audit",
         }
 
         action = action_mapping.get(sender)
@@ -48,7 +50,9 @@ def asset_save_handler(sender, instance, created, **kwargs):
             logger.warning(f"No action mapped for sender: {sender}")
             return
 
-        user = getattr(instance, 'user', None)  # Ensure the instance has a `user` attribute
+        user = getattr(
+            instance, "user", None
+        )  # Ensure the instance has a `user` attribute
         if not user:
             logger.warning(f"No user associated with instance: {instance}")
             return
@@ -57,5 +61,3 @@ def asset_save_handler(sender, instance, created, **kwargs):
             create_asset_history(action, instance, user)
     except Exception as e:
         logger.warning(f"Error in asset_save_handler: {str(e)}")
-
-

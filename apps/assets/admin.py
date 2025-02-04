@@ -20,7 +20,7 @@ from apps.assets.models import (
     ComponentCheckIn,
     ComponentCheckOut,
     ComponentRequest,
-    AssetAudit
+    AssetAudit,
 )
 
 

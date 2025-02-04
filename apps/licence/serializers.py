@@ -1,44 +1,42 @@
 from rest_framework import serializers
 from apps.assets.serializers import AssetManufacturerSerializer
 from apps.licence.models import (
-  LicenseCategoryTypes,
-  LicenseCategory,
-  License,
-  LicenseCheckOut,
-  LicenseHistory,
+    LicenseCategoryTypes,
+    LicenseCategory,
+    License,
+    LicenseCheckOut,
+    LicenseHistory,
 )
 
 
 class LicenseCategoryTypesSerializer(serializers.ModelSerializer):
     class Meta:
         model = LicenseCategoryTypes
-        fields = '__all__'
+        fields = "__all__"
 
 
 class LicenseCategoryCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = LicenseCategory
-        fields = '__all__'
-
+        fields = "__all__"
 
 
 class LicenseCategoryListSerializer(serializers.ModelSerializer):
     category_type = serializers.SerializerMethodField()
 
-    def get_category_type(self,obj):
+    def get_category_type(self, obj):
         if obj.category_type:
             return {
-                'id':obj.category_type.id,
-                'uid':obj.category_type.uid,
-                'name':obj.category_type.name
+                "id": obj.category_type.id,
+                "uid": obj.category_type.uid,
+                "name": obj.category_type.name,
             }
         else:
             return None
 
     class Meta:
         model = LicenseCategory
-        fields = '__all__'
-
+        fields = "__all__"
 
 
 class LicenseCreateUpdateSerializer(serializers.ModelSerializer):
@@ -52,41 +50,39 @@ class LicenseListSerializer(serializers.ModelSerializer):
     manufacturer = serializers.SerializerMethodField()
     licensed_to = serializers.SerializerMethodField()
 
-    def get_category(self,obj):
+    def get_category(self, obj):
         if obj.category:
             return {
-                'id':obj.category.id,
-                'uid':obj.category.uid,
-                'name':obj.category.name,
-                'category_type':obj.category.category_type.name
+                "id": obj.category.id,
+                "uid": obj.category.uid,
+                "name": obj.category.name,
+                "category_type": obj.category.category_type.name,
             }
         else:
             return None
-        
+
     def get_manufacturer(self, obj):
         if obj.manufacturer:
             return AssetManufacturerSerializer(obj.manufacturer).data
         return None
-    
-    def get_licensed_to(self,obj):
+
+    def get_licensed_to(self, obj):
         if obj.licensed_to:
             return {
-                'id':obj.licensed_to.id,
-                'uid':obj.licensed_to.uid,
-                'full_name': f"{obj.licensed_to.first_name} {obj.licensed_to.last_name}"
+                "id": obj.licensed_to.id,
+                "uid": obj.licensed_to.uid,
+                "full_name": f"{obj.licensed_to.first_name} {obj.licensed_to.last_name}",
             }
-
 
     class Meta:
         model = License
-        fields = "__all__" 
-
+        fields = "__all__"
 
 
 class LicenseCheckOutCreateUpdateSerializer(serializers.ModelSerializer):
-   class Meta:
+    class Meta:
         model = LicenseCheckOut
-        fields = '__all__'
+        fields = "__all__"
 
 
 class LicenseCheckOutListSerializer(serializers.ModelSerializer):
@@ -94,12 +90,12 @@ class LicenseCheckOutListSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     checkout_by = serializers.SerializerMethodField()
 
-    def get_license(self,obj):
+    def get_license(self, obj):
         if obj.license:
             return LicenseListSerializer(obj.license).data
         else:
             return None
-        
+
     def get_user(self, obj):
         if obj.user:
             return {
@@ -109,7 +105,7 @@ class LicenseCheckOutListSerializer(serializers.ModelSerializer):
             }
         else:
             return None
-        
+
     def get_checkout_by(self, obj):
         if obj.checkout_by:
             return {
@@ -120,28 +116,27 @@ class LicenseCheckOutListSerializer(serializers.ModelSerializer):
         else:
             return None
 
-
     class Meta:
         model = LicenseCheckOut
-        fields = '__all__'
+        fields = "__all__"
 
 
 class LicenseHistoryCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = LicenseHistory
-        fields = '__all__'
+        fields = "__all__"
 
 
 class LicenseHistoryListSerializer(serializers.ModelSerializer):
     license = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
 
-    def get_license(self,obj):
+    def get_license(self, obj):
         if obj.license:
             return LicenseListSerializer(obj.license).data
         else:
             return None
-        
+
     def get_user(self, obj):
         if obj.user:
             return {
@@ -154,4 +149,4 @@ class LicenseHistoryListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LicenseHistory
-        fields = '__all__'
+        fields = "__all__"
