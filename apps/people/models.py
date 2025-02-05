@@ -62,7 +62,7 @@ class Department(models.Model):
 class User(AbstractUser):
     # first_name, last_name, username, email already exist in AbstractUser
     username = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    employee_no = models.CharField(max_length=300, unique=True)
+    employee_no = models.CharField(max_length=300,null=True,blank=True)
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     password = models.CharField(max_length=255, null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True, blank=True)

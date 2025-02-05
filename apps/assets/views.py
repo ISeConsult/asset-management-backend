@@ -1,16 +1,17 @@
-import datetime
+from datetime import datetime
 import logging
 import arrow
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import action,api_view
-from rest_framework import viewsets, status, permissions,generics
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework import viewsets, status, permissions, generics
 from rest_framework.response import Response
 from django.db import transaction
 from apps.assets.pagination import FetchDataPagination
 from apps.licence.models import License
 from apps.licence.serializers import LicenseListSerializer
-from apps.people.models import User
+from apps.people.models import Department, User
 from apps.people.permissions import TokenRequiredPermission, AdminCheckPermission
+from django.db.models.functions import TruncMonth
 from apps.assets.models import (
     Asset,
     AssetCategoryTypes,
@@ -80,6 +81,9 @@ from apps.people.serializers import UserListSerializer
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
+from apps.userActivities.models import UserActivity
+from apps.userActivities.serializers import UserActivitiesSerializer
+from django.db.models import Count, Q
 
 logger = logging.getLogger(__name__)
 
@@ -1961,7 +1965,6 @@ class ComponentsViewset(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-
         if not purchase_date:
             return Response(
                 {"success": False, "info": "purchase_date is required"},
@@ -2187,112 +2190,69 @@ class ComponentCheckoutViewset(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         try:
             data = request.data
-            component_request_id = data.get("component_request")
             component_id = data.get("component")
             user_id = data.get("user")
             asset_id = data.get("asset")
 
-            # Validate at least one identifier is provided
-            if not component_request_id and not component_id:
+            # Ensure that component_id is provided
+            if not component_id:
                 return Response(
-                    {
-                        "success": False,
-                        "info": "Component request ID or component ID is required",
-                    },
+                    {"success": False, "info": "Component ID is required"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            component = None  # Initialize to avoid unassigned variable error
+            # Fetch the component
+            try:
+                component = Components.objects.get(id=component_id)
+            except Components.DoesNotExist:
+                return Response(
+                    {"success": False, "info": "Component does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-            if component_request_id:
-                try:
-                    component_request = ComponentRequest.objects.get(
-                        id=component_request_id
-                    )
-                    data["component"] = component_request.component.id
-                    data["user"] = component_request.user.id
-
-                    # Ensure the component is associated
-                    if not component_request.component:
-                        return Response(
-                            {
-                                "success": False,
-                                "info": "No component associated with this request",
-                            },
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
-
-                    # Update request status
-                    component_request.status = "approved"
-                    component_request.save(update_fields=["status"])
-                    component = component_request.component
-
-                except ComponentRequest.DoesNotExist:
-                    return Response(
-                        {"success": False, "info": "Component request does not exist"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            elif component_id:
-                try:
-                    component = Components.objects.get(id=component_id)
-                    user = User.objects.get(id=user_id)
-                    component_status = Components.ComponentStatus.CHECKED_OUT
-                    asset = Asset.objects.get(id=asset_id)
-
-                    if not asset:
-                        return Response(
-                            {"success": False, "info": "Asset does not exist"},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
-
-                    if asset_id:
-                        try:
-                            asset = Asset.objects.get(id=asset_id)
-                            data["asset"] = asset
-                            component.checked_asset = asset
-                        except Asset.DoesNotExist:
-                            return Response(
-                                {"success": False, "info": "Asset does not exist"},
-                                status=status.HTTP_400_BAD_REQUEST,
-                            )
-                    else:
-                        try:
-                            user = User.objects.get(id=user_id)
-                            data["user"] = user_id
-                            component.current_assignee = user
-                        except User.DoesNotExist:
-                            return Response(
-                                {"success": False, "info": "User does not exist"},
-                                status=status.HTTP_400_BAD_REQUEST,
-                            )
-
-                except Components.DoesNotExist:
-                    return Response(
-                        {"success": False, "info": "Component does not exist"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                except User.DoesNotExist:
+            # Determine whether checking out to a user or an asset
+            if user_id and not asset_id:
+                # Checking out to a user requires user_id and component_id
+                user = User.objects.filter(id=user_id).first()
+                if not user:
                     return Response(
                         {"success": False, "info": "User does not exist"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+                data["user"] = user.id
+                component.current_assignee = user
+                component.checked_asset = None  # Unassign any previous asset
 
-            with transaction.atomic():
-                # Save component updates if component is assigned
-                if component:
-                    component.save(
-                        update_fields=["status", "current_assignee", "checked_asset"]
-                    )
-                else:
+            elif asset_id and not user_id:
+                # Checking out to an asset requires asset_id and component_id
+                asset = Asset.objects.filter(id=asset_id).first()
+                if not asset:
                     return Response(
-                        {"success": False, "info": "Component could not be processed"},
+                        {"success": False, "info": "Asset does not exist"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+                data["asset"] = asset.id
+                component.checked_asset = asset
+                component.current_assignee = None  # Unassign any previous user
 
+            else:
+                return Response(
+                    {
+                        "success": False,
+                        "info": "Provide either a user ID or an asset ID, but not both",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Perform atomic transaction
+            with transaction.atomic():
+                component.status = Components.ComponentStatus.CHECKED_OUT
+                component.save(
+                    update_fields=["status", "current_assignee", "checked_asset"]
+                )
+
+                # Save checkout record
                 data["checkout_by"] = request.user.id
-
-                # Serialize and save checkout
                 serializer = self.get_serializer(data=data)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
@@ -2301,6 +2261,7 @@ class ComponentCheckoutViewset(viewsets.ModelViewSet):
                     {"success": True, "info": serializer.data},
                     status=status.HTTP_201_CREATED,
                 )
+
         except Exception as e:
             logger.error(f"Error processing request: {e}", exc_info=True)
             return Response(
@@ -2312,18 +2273,181 @@ class ComponentCheckoutViewset(viewsets.ModelViewSet):
             )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
+@permission_classes([TokenRequiredPermission])
 def main_dashboard_breakdown(request):
     try:
-        pass
+        # Optimized count queries
+        total_assets = Asset.objects.count()
+        total_licenses = License.objects.count()
+
+        # Asset status counts using annotations
+        asset_status_counts = Asset.objects.aggregate(
+            checked_out_assets=Count(
+                "id", filter=Q(status=Asset.AssetStatus.CHECKED_OUT)
+            ),
+            checked_in_assets=Count(
+                "id", filter=Q(status=Asset.AssetStatus.CHECKED_IN)
+            ),
+            pending=Count("id", filter=Q(status=Asset.AssetStatus.PENDING)),
+        )
+
+        # Category-based counts (avoiding multiple queries)
+        category_counts = Asset.objects.values("category__name").annotate(
+            count=Count("id")
+        )
+        category_data = {
+            item["category__name"]: item["count"] for item in category_counts
+        }
+
+        assessories = category_data.get("accessories", 0)
+        consumables = category_data.get("consumables", 0)
+        components = Components.objects.count()
+
+        all_asset_card = {
+            "assessories": assessories,
+            "consumables": consumables,
+            "total_assets": total_assets,
+            "checked_out_assets": asset_status_counts["checked_out_assets"],
+            "checked_in_assets": asset_status_counts["checked_in_assets"],
+            "components": components,
+            "total_licenses": total_licenses,
+        }
+
+        asset_pie_chart = {
+            "available": asset_status_counts["checked_in_assets"],
+            "deployed": asset_status_counts["checked_out_assets"],
+            "pending": asset_status_counts["pending"],
+        }
+
+        # Serialize user activities
+        current_activities = UserActivity.objects.select_related("user").filter(
+            user=request.user
+        )[:4]
+        serialized_activities = UserActivitiesSerializer(
+            current_activities, many=True
+        ).data
+
+        latest_asset_history = AssetsHistory.objects.order_by("-created_at")[:10]
+        serialized_history = AssetHistoryListSerializer(
+            latest_asset_history, many=True
+        ).data
+
+        total_assets = Asset.objects.count()
+        total_licenses = License.objects.count()
+        total_component = Components.objects.count()
+
+        # Monthly Asset Count
+        monthly_assets = (
+            Asset.objects.annotate(month=TruncMonth("created_at"))
+            .values("month")
+            .annotate(count=Count("id"))
+            .order_by("month")
+        )
+
+        # Monthly License Count
+        monthly_licenses = (
+            License.objects.annotate(month=TruncMonth("created_at"))
+            .values("month")
+            .annotate(count=Count("id"))
+            .order_by("month")
+        )
+
+        monthly_components = (
+            Components.objects.annotate(month=TruncMonth("created_at"))
+            .values("month")
+            .annotate(count=Count("id"))
+            .order_by("month")
+        )
+
+        # Prepare data for all 12 months (Jan-Dec)
+        months = [datetime(2025, i, 1).strftime("%Y-%m-%d") for i in range(1, 13)]
+        assets_data = {
+            entry["month"].strftime("%Y-%m-%d"): entry["count"]
+            for entry in monthly_assets
+        }
+        licenses_data = {
+            entry["month"].strftime("%Y-%m-%d"): entry["count"]
+            for entry in monthly_licenses
+        }
+        components_data = {
+            entry["month"].strftime("%Y-%m-%d"): entry["count"]
+            for entry in monthly_components
+        }
+
+        total_assets_chart = [
+            {"name": "Assets", "data": [assets_data.get(month, 0) for month in months]},
+            {
+                "name": "Licenses",
+                "data": [licenses_data.get(month, 0) for month in months],
+            },
+            {
+                "name": "Components",
+                "data": [components_data.get(month, 0) for month in months],
+            },
+        ]
+
+        # Fetch all departments with the count of related users
+        departments = Department.objects.annotate(total_users=Count("user"))
+
+        # Calculate total users across all departments
+        total_users = sum(dept.total_users for dept in departments)
+
+        # Mapping colors based on department (customize as needed)
+        color_map = {
+            "Administration": "success",
+            "Marketing": "warning",
+            "Technical": "info",
+            "Product Management": "danger",
+        }
+
+        # Construct depart_data
+        depart_data = [
+            {
+                "title": dept.name,
+                "color": color_map.get(dept.name, "primary"),
+                "people": dept.total_users,
+                "percentage": (
+                    f"{(dept.total_users / total_users) * 100:.2f}%"
+                    if total_users
+                    else "0%"
+                ),
+            }
+            for dept in departments
+        ]
+
+        # Extract the department counts
+        total_departments = departments.count()
+        department_counts = [dept.total_users for dept in departments]
+
+        # Final series output
+        series = {"totalDep": total_departments, "data": department_counts}
+
+        department_data = {
+            "series": series,
+            "departData": depart_data,
+        }
+
+        return Response(
+            {
+                "success": True,
+                "info": {
+                    "all_asset_card": all_asset_card,
+                    "asset_pie_chart": asset_pie_chart,
+                    "user_activity": serialized_activities,
+                    "asset_history": serialized_history,
+                    "assets_bar_chart": total_assets_chart,
+                    "available_departments": department_data,
+                },
+            }
+        )
 
     except Exception as e:
         logger.warning(str(e))
         return Response(
-                {
-                    "success": False,
-                    "info": "An error occurred while processing your request",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+            {
+                "success": False,
+                "info": "An error occurred while processing your request",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )

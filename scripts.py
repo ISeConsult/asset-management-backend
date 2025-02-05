@@ -5,7 +5,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "asm_backend.settings")
 django.setup()
 
 from post_office.models import EmailTemplate
-from apps.assets.models import AssetStatus
 
 def upload_templates(directory):
     for filename in os.listdir(directory):
@@ -24,19 +23,22 @@ def upload_templates(directory):
                 else:
                     print(f"Template '{template_name}' updated successfully.")
 
-
-
-def upload_asset_status():
-    status = ['pending','in_repair','checked_in','checked_out']
-
-    for stat in status:
-        AssetStatus.objects.create(name=stat)
-        print(f"{stat} created")
-
     
 
 
 # upload_asset_status()
 # upload_templates('templates')
 
+
+from django.apps import apps
+
+excluded_apps = ['auth', 'contenttypes', 'admin', 'sessions', 'django_celery_results', 'django_celery_beat', 'post_office']
+
+local_apps = []
+for model in apps.get_models():
+    if model._meta.app_label not in excluded_apps:
+        local_apps.append(model)
+        print(f"{model._meta.app_label}.{model.__name__}")
+
+print(local_apps)
 

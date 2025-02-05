@@ -198,7 +198,6 @@ class UserViewset(viewsets.ModelViewSet):
             "department",
             "role",
             "phone",
-            "employee_no",
         ]
 
         for field in required_fields:

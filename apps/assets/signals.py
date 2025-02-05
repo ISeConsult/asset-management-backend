@@ -8,6 +8,10 @@ from apps.assets.models import (
     AssetMaintenanceRequest,
     AssetsHistory,
     AssetAudit,
+    ComponentHistory,
+    ComponentCheckIn,
+    ComponentCheckOut,
+    ComponentRequest,
 )
 from django.contrib.auth.models import User
 import logging
@@ -61,3 +65,37 @@ def asset_save_handler(sender, instance, created, **kwargs):
             create_asset_history(action, instance, user)
     except Exception as e:
         logger.warning(f"Error in asset_save_handler: {str(e)}")
+
+
+def create_component_history(action, instance, user):
+    try:
+        ComponentHistory.objects.create(
+            component=getattr(instance, "component", None), user=user, action=action
+        )
+    except Exception as e:
+        logger.warning(f"Failed to create component history: {str(e)}")
+
+
+@receiver(post_save, sender=ComponentCheckIn)
+@receiver(post_save, sender=ComponentCheckOut)
+@receiver(post_save, sender=ComponentRequest)
+def component_save_handler(sender, instance, created, **kwargs):
+    try:
+        action_mapping = {
+            ComponentCheckIn: "check_in",
+            ComponentCheckOut: "check_out",
+            ComponentRequest: "request",
+        }
+        action = action_mapping.get(sender)
+        if not action:
+            logger.warning(f"No action mapped for sender: {sender}")
+            return
+        user = getattr(instance, "user", None)
+        if not user:
+            logger.warning(f"No user associated with instance: {instance}")
+            return
+        if created:  # Log only for newly created instances
+            create_component_history(action, instance, user)
+
+    except Exception as e:
+        logger.warning(f"Failed to create component history: {str(e)}")

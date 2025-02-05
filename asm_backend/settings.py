@@ -10,8 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import logging
 from pathlib import Path
 from decouple import config
+from asm_backend.logFormatter import CustomJsonFormatter
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from django.utils.log import DEFAULT_LOGGING
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -47,6 +52,7 @@ INSTALLED_APPS = [
     "apps.people",
     "apps.assets",
     "apps.licence",
+    "apps.userActivities",
     # third party apps
     "rest_framework",
     "corsheaders",
@@ -65,6 +71,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.userActivities.middleware.CaptureRequestMiddleware",
 ]
 
 ROOT_URLCONF = "asm_backend.urls"
@@ -189,30 +196,59 @@ CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND")
 CELERY_TIME_ZONE = config("CELERY_TIME_ZONE")
 
 
-# LOGGING = {
-#     "version": 1,
-#     "disable_existing_loggers": False,
-#     "handlers": {
-#         "file": {
-#             "level": "INFO",
-#             "class": "logging.FileHandler",
-#             "filename": "requests.log",
-#         },
-#     },
-#     "filters": {
-#         "exclude_reload": {
-#             "()": "django.utils.log.CallbackFilter",
-#             "callback": lambda record: not record.getMessage().startswith(
-#                 "Watching for file changes"
-#             ),
-#         },
-#     },
-#     "loggers": {
-#         "django": {
-#             "handlers": ["file"],
-#             "level": "INFO",
-#             "filters": ["exclude_reload"],
-#             "propagate": True,
-#         },
-#     },
-# }
+LOG_DIR = Path("./logs")
+LOG_DIR.mkdir(exist_ok=True)
+
+LOG_LEVEL = "DEBUG" 
+
+
+# Check if logging is already configured
+if not logging.getLogger().handlers:
+
+    # Define formatters
+    formatter_console = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(funcName)s - Line: %(lineno)d - %(message)s"
+    )
+
+    formatter_file = logging.Formatter(
+        "%(asctime)s - PID: %(process)d - Thread: %(threadName)s - %(name)s - %(levelname)s - %(pathname)s - Line: %(lineno)d - %(message)s"
+    )
+
+    formatter_json = CustomJsonFormatter()
+    formatter_django_server = DEFAULT_LOGGING["formatters"]["django.server"]
+
+    # Create handlers
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter_console)
+
+    file_handler = RotatingFileHandler(
+        LOG_DIR / "asm.log", maxBytes=1024 * 1024 * 100, backupCount=7
+    )
+    file_handler.setFormatter(formatter_file)
+
+    custom_logger_handler = RotatingFileHandler(
+        LOG_DIR / "asm_custom.log", maxBytes=1024 * 1024 * 100, backupCount=7
+    )
+    custom_logger_handler.setFormatter(formatter_json)
+
+    # Configure root logger
+    root_logger = logging.getLogger()
+    if not root_logger.handlers:  # Avoid duplicate handlers
+        root_logger.setLevel(LOG_LEVEL)
+        root_logger.addHandler(console_handler)
+        root_logger.addHandler(file_handler)
+        root_logger.addHandler(custom_logger_handler)
+    
+    loggers = {
+        "apps": LOG_LEVEL,
+        "django.server": LOG_LEVEL,
+        "channels": LOG_LEVEL,
+    }
+
+    for logger_name, level in loggers.items():
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(level)
+        logger.addHandler(console_handler)
+        logger.addHandler(file_handler)
+        logger.addHandler(custom_logger_handler)
+
