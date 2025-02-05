@@ -21,6 +21,7 @@ from apps.assets.views import (
     ComponentCheckoutViewset,
     AssetHistoryViewset,
     AssetAuditViewset,
+    main_dashboard_breakdown,
 )
 
 from rest_framework.routers import DefaultRouter
@@ -58,4 +59,5 @@ router.register(r"component-check-out", ComponentCheckoutViewset, "component-che
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("dashboard/", main_dashboard_breakdown),
 ]
