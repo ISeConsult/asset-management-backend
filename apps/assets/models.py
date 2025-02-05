@@ -467,7 +467,8 @@ class ComponentCheckOut(models.Model):
     component = models.ForeignKey(Components, on_delete=models.CASCADE)
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(
-        "people.User", on_delete=models.CASCADE, related_name="component_checkout_user"
+        "people.User", on_delete=models.CASCADE, related_name="component_checkout_user",
+        null=True,blank=True
     )
     checkout_by = models.ForeignKey(
         "people.User",

@@ -18,7 +18,7 @@ excluded_apps = [
     "django_celery_beat",
     "post_office",
     "userActivities",
-    "people",
+    
 ]
 
 # Get all models except excluded ones

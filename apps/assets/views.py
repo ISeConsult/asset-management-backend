@@ -1890,6 +1890,7 @@ class AssetCheckoutViewset(viewsets.ModelViewSet):
 
 class ComponentsViewset(viewsets.ModelViewSet):
     queryset = Components.objects.all()
+    permission_classes = [TokenRequiredPermission]
     lookup_field = "uid"
     pagination_class = FetchDataPagination
 

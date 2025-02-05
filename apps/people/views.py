@@ -170,6 +170,12 @@ class UserViewset(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     lookup_field = "uid"
 
+    def get_permissions(self):
+        if self.action == 'create':
+            return permissions.AllowAny
+        return [TokenRequiredPermission]
+        
+
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
             return UserCreateUpdateSerializer
