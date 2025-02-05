@@ -8,6 +8,13 @@ import threading
 
 User = get_user_model()
 
+"""
+
+This module contains signal handlers for user activity tracking.
+update to be able to track user create and update actions
+
+"""
+
 # Exclude system apps
 excluded_apps = [
     "auth",
@@ -18,7 +25,7 @@ excluded_apps = [
     "django_celery_beat",
     "post_office",
     "userActivities",
-    
+    "people",
 ]
 
 # Get all models except excluded ones
