@@ -35,6 +35,7 @@ from apps.assets.models import (
     ComponentCheckOut,
     AssetsHistory,
     AssetAudit,
+    ComponentHistory,
 )
 from apps.assets.serializers import (
     AssetCategoryCreateUpdateSerializer,
@@ -66,6 +67,7 @@ from apps.assets.serializers import (
     CompanyListSerializer,
     ComponentCheckOutCreateUpdateSerializer,
     ComponentCheckOutListSerializer,
+    ComponentHistoryListSerializer,
     ComponentsCreateUpdateSerializer,
     ComponentsListSerializer,
     ComponentCheckInCreateUpdateSerializer,
@@ -2274,6 +2276,14 @@ class ComponentCheckoutViewset(viewsets.ModelViewSet):
             )
 
 
+class ComponentHistoryListViewset(generics.ListAPIView):
+    queryset = ComponentHistory.objects.select_related('component').all()
+    serializer_class = ComponentHistoryListSerializer
+    permission_classes = [TokenRequiredPermission]
+    pagination_class = FetchDataPagination
+    filterset_fields = ['component', 'created_at']
+
+
 @api_view(["GET"])
 @permission_classes([TokenRequiredPermission])
 def main_dashboard_breakdown(request):
@@ -2316,8 +2326,8 @@ def main_dashboard_breakdown(request):
         }
 
         asset_pie_chart = {
-            "available": asset_status_counts["checked_in_assets"],
-            "deployed": asset_status_counts["checked_out_assets"],
+            "checked_in": asset_status_counts["checked_in_assets"],
+            "checked_out": asset_status_counts["checked_out_assets"],
             "pending": asset_status_counts["pending"],
         }
 

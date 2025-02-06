@@ -20,6 +20,7 @@ from apps.assets.models import (
     ComponentRequest,
     AssetsHistory,
     AssetAudit,
+    ComponentHistory,
 )
 from rest_framework import serializers
 from decouple import config
@@ -913,3 +914,25 @@ class AssetAuditListViewset(serializers.ModelSerializer):
     class Meta:
         model = AssetAudit
         fields = "__all__"
+
+
+
+class ComponentHistoryListSerializer(serializers.ModelSerializer):
+    component = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+
+    def get_component(self, obj):
+        return ComponentsListSerializer(obj.component).data if obj.component else None
+
+    def get_user(self, obj):
+        if obj.user:
+            return {
+                "id": obj.user.id,
+                "uid": obj.user.uid,
+                "full_name": f"{obj.user.first_name} {obj.user.last_name}",
+            }
+        return None
+
+    class Meta:
+        model = ComponentHistory
+        fields = '__all__'
