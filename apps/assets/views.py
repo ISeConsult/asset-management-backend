@@ -2310,12 +2310,6 @@ def main_dashboard_breakdown(request):
         # Asset type breakdown
         all_assets_card = [
         {
-            "title": "Consumables",
-            "stats": f"{category_data.get('consumables', 0):,}",
-            "icon": "mdi-water",
-            "color": "primary",
-        },
-        {
             "title": "Licenses",
             "stats": f"{total_counts['total_licenses']:,}",
             "icon": "mdi-license",
@@ -2338,19 +2332,7 @@ def main_dashboard_breakdown(request):
             "stats": f"{asset_status_counts['checked_in_assets']:,}",
             "icon": "mdi-clipboard-check-outline",
             "color": "secondary",
-        },
-        {
-            "title": "Pending",
-            "stats": f"{asset_status_counts['pending_assets']:,}",
-            "icon": "mdi-timer-sand",
-            "color": "orange",
-        },
-        {
-            "title": "Repair",
-            "stats": f"{asset_status_counts['repair_assets']:,}",
-            "icon": "mdi-tools",
-            "color": "red",
-        },
+        }
     ]
 
         # Updated Pie Chart Data (Dynamically Calculated)
