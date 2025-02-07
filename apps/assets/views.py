@@ -2288,123 +2288,123 @@ class ComponentHistoryListViewset(generics.ListAPIView):
 @permission_classes([TokenRequiredPermission])
 def main_dashboard_breakdown(request):
     try:
-        # Optimized count queries
-        total_assets = Asset.objects.count()
-        total_licenses = License.objects.count()
+        # Optimized queries for total counts
+        total_counts = {
+            "total_assets": Asset.objects.count(),
+            "total_licenses": License.objects.count(),
+            "total_components": Components.objects.count(),
+        }
 
         # Asset status counts using annotations
         asset_status_counts = Asset.objects.aggregate(
-            checked_out_assets=Count(
-                "id", filter=Q(status=Asset.AssetStatus.CHECKED_OUT)
-            ),
-            checked_in_assets=Count(
-                "id", filter=Q(status=Asset.AssetStatus.CHECKED_IN)
-            ),
-            pending=Count("id", filter=Q(status=Asset.AssetStatus.PENDING)),
+            checked_out_assets=Count("id", filter=Q(status=Asset.AssetStatus.CHECKED_OUT)),
+            checked_in_assets=Count("id", filter=Q(status=Asset.AssetStatus.CHECKED_IN)),
+            pending_assets=Count("id", filter=Q(status=Asset.AssetStatus.PENDING)),
+            repair_assets=Count("id", filter=Q(status=Asset.AssetStatus.IN_REPAIR)), 
         )
 
-        # Category-based counts (avoiding multiple queries)
-        category_counts = Asset.objects.values("category__name").annotate(
-            count=Count("id")
-        )
-        category_data = {
-            item["category__name"]: item["count"] for item in category_counts
-        }
+        # Category-based asset counts
+        category_counts = Asset.objects.values("category__name").annotate(count=Count("id"))
+        category_data = {item["category__name"].lower(): item["count"] for item in category_counts}
 
-        assessories = category_data.get("accessories", 0)
-        consumables = category_data.get("consumables", 0)
-        components = Components.objects.count()
+        # Asset type breakdown
+        all_assets_card = [
+        {
+            "title": "Consumables",
+            "stats": f"{category_data.get('consumables', 0):,}",
+            "icon": "mdi-water",
+            "color": "primary",
+        },
+        {
+            "title": "Licenses",
+            "stats": f"{total_counts['total_licenses']:,}",
+            "icon": "mdi-license",
+            "color": "info",
+        },
+        {
+            "title": "Components",
+            "stats": f"{total_counts['total_components']:,}",
+            "icon": "mdi-chip",
+            "color": "warning",
+        },
+        {
+            "title": "Checked Out",
+            "stats": f"{asset_status_counts['checked_out_assets']:,}",
+            "icon": "mdi-check-circle-outline",
+            "color": "success",
+        },
+        {
+            "title": "Checked In",
+            "stats": f"{asset_status_counts['checked_in_assets']:,}",
+            "icon": "mdi-clipboard-check-outline",
+            "color": "secondary",
+        },
+        {
+            "title": "Pending",
+            "stats": f"{asset_status_counts['pending_assets']:,}",
+            "icon": "mdi-timer-sand",
+            "color": "orange",
+        },
+        {
+            "title": "Repair",
+            "stats": f"{asset_status_counts['repair_assets']:,}",
+            "icon": "mdi-tools",
+            "color": "red",
+        },
+    ]
 
-        all_asset_card = {
-            "assessories": assessories,
-            "consumables": consumables,
-            "total_assets": total_assets,
-            "checked_out_assets": asset_status_counts["checked_out_assets"],
-            "checked_in_assets": asset_status_counts["checked_in_assets"],
-            "components": components,
-            "total_licenses": total_licenses,
-        }
+        # Updated Pie Chart Data (Dynamically Calculated)
+        salesOverviews = [
+            {"status": "checked out", "total": asset_status_counts["checked_out_assets"]},
+            {"status": "repair", "total": asset_status_counts.get("repair_assets", 0)},
+            {"status": "Checked in", "total": asset_status_counts["checked_in_assets"]},
+            {"status": "pending", "total": asset_status_counts["pending_assets"]},
+        ]
+
+        # Generate series dynamically from salesOverviews
+        series = [entry["total"] for entry in salesOverviews]
 
         asset_pie_chart = {
-            "checked_in": asset_status_counts["checked_in_assets"],
-            "checked_out": asset_status_counts["checked_out_assets"],
-            "pending": asset_status_counts["pending"],
+            "series": series,
+            "salesOverviews": salesOverviews,
         }
 
-        # Serialize user activities
-        current_activities = UserActivity.objects.select_related("user").filter(
-            user=request.user
-        )[:4]
-        serialized_activities = UserActivitiesSerializer(
-            current_activities, many=True
-        ).data
+        # Serialize recent user activities
+        current_activities = UserActivity.objects.select_related("user").filter(user=request.user)[:4]
+        serialized_activities = UserActivitiesSerializer(current_activities, many=True).data
 
+        # Latest asset history
         latest_asset_history = AssetsHistory.objects.order_by("-created_at")[:10]
-        serialized_history = AssetHistoryListSerializer(
-            latest_asset_history, many=True
-        ).data
+        serialized_history = AssetHistoryListSerializer(latest_asset_history, many=True).data
 
-        total_assets = Asset.objects.count()
-        total_licenses = License.objects.count()
-        total_component = Components.objects.count()
+        # Monthly counts for Assets, Licenses, and Components
+        def get_monthly_counts(model):
+            return {
+                entry["month"].strftime("%Y-%m-%d"): entry["count"]
+                for entry in model.objects.annotate(month=TruncMonth("created_at"))
+                .values("month")
+                .annotate(count=Count("id"))
+                .order_by("month")
+            }
 
-        # Monthly Asset Count
-        monthly_assets = (
-            Asset.objects.annotate(month=TruncMonth("created_at"))
-            .values("month")
-            .annotate(count=Count("id"))
-            .order_by("month")
-        )
-
-        # Monthly License Count
-        monthly_licenses = (
-            License.objects.annotate(month=TruncMonth("created_at"))
-            .values("month")
-            .annotate(count=Count("id"))
-            .order_by("month")
-        )
-
-        monthly_components = (
-            Components.objects.annotate(month=TruncMonth("created_at"))
-            .values("month")
-            .annotate(count=Count("id"))
-            .order_by("month")
-        )
+        monthly_assets = get_monthly_counts(Asset)
+        monthly_licenses = get_monthly_counts(License)
+        monthly_components = get_monthly_counts(Components)
 
         # Prepare data for all 12 months (Jan-Dec)
         months = [datetime(2025, i, 1).strftime("%Y-%m-%d") for i in range(1, 13)]
-        assets_data = {
-            entry["month"].strftime("%Y-%m-%d"): entry["count"]
-            for entry in monthly_assets
-        }
-        licenses_data = {
-            entry["month"].strftime("%Y-%m-%d"): entry["count"]
-            for entry in monthly_licenses
-        }
-        components_data = {
-            entry["month"].strftime("%Y-%m-%d"): entry["count"]
-            for entry in monthly_components
-        }
 
         total_assets_chart = [
-            {"name": "Assets", "data": [assets_data.get(month, 0) for month in months]},
-            {
-                "name": "Licenses",
-                "data": [licenses_data.get(month, 0) for month in months],
-            },
-            {
-                "name": "Components",
-                "data": [components_data.get(month, 0) for month in months],
-            },
+            {"name": "Assets", "data": [monthly_assets.get(month, 0) for month in months]},
+            {"name": "Licenses", "data": [monthly_licenses.get(month, 0) for month in months]},
+            {"name": "Components", "data": [monthly_components.get(month, 0) for month in months]},
         ]
 
-        # Fetch all departments with the count of related users
+        # Department-based user distribution
         departments = Department.objects.annotate(total_users=Count("user"))
-
-        # Calculate total users across all departments
         total_users = sum(dept.total_users for dept in departments)
 
-        # Mapping colors based on department (customize as needed)
+        # Mapping department colors
         color_map = {
             "Administration": "success",
             "Marketing": "warning",
@@ -2412,30 +2412,19 @@ def main_dashboard_breakdown(request):
             "Product Management": "danger",
         }
 
-        # Construct depart_data
+        # Construct department data
         depart_data = [
             {
                 "title": dept.name,
                 "color": color_map.get(dept.name, "primary"),
                 "people": dept.total_users,
-                "percentage": (
-                    f"{(dept.total_users / total_users) * 100:.2f}%"
-                    if total_users
-                    else "0%"
-                ),
+                "percentage": f"{(dept.total_users / total_users) * 100:.2f}%" if total_users > 0 else "0%",
             }
             for dept in departments
         ]
 
-        # Extract the department counts
-        total_departments = departments.count()
-        department_counts = [dept.total_users for dept in departments]
-
-        # Final series output
-        series = {"totalDep": total_departments, "data": department_counts}
-
         department_data = {
-            "series": series,
+            "series": {"totalDep": departments.count(), "data": [dept.total_users for dept in departments]},
             "departData": depart_data,
         }
 
@@ -2443,8 +2432,8 @@ def main_dashboard_breakdown(request):
             {
                 "success": True,
                 "info": {
-                    "all_asset_card": all_asset_card,
-                    "asset_pie_chart": asset_pie_chart,
+                    "all_asset_card": all_assets_card,
+                    "asset_pie_chart": asset_pie_chart,  # Updated Pie Chart
                     "user_activity": serialized_activities,
                     "asset_history": serialized_history,
                     "assets_bar_chart": total_assets_chart,
@@ -2454,7 +2443,7 @@ def main_dashboard_breakdown(request):
         )
 
     except Exception as e:
-        logger.warning(str(e))
+        logger.exception("Error in main_dashboard_breakdown")
         return Response(
             {
                 "success": False,
