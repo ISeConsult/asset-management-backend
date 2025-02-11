@@ -23,6 +23,7 @@ class Authenticator:
         payload = {
             "user_uid": str(user.uid),
             "user_id": user.id,
+            "full_name": f"{user.first_name} {user.last_name}",
             "exp": arrow.utcnow().shift(days=30).datetime,
             "iat": arrow.utcnow().datetime,
         }

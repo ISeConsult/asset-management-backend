@@ -2415,7 +2415,7 @@ def main_dashboard_breakdown(request):
                 "success": True,
                 "info": {
                     "all_asset_card": all_assets_card,
-                    "asset_pie_chart": asset_pie_chart,  # Updated Pie Chart
+                    "asset_pie_chart": asset_pie_chart, 
                     "user_activity": serialized_activities,
                     "asset_history": serialized_history,
                     "assets_bar_chart": total_assets_chart,
