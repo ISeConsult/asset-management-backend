@@ -767,7 +767,7 @@ class ComponentRequestCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class ComponentRequestListSerializer(serializers.ModelSerializer):
-    location = serializers.SerializerMethodField()
+    # location = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     component = serializers.SerializerMethodField()
 
@@ -791,18 +791,18 @@ class ComponentRequestListSerializer(serializers.ModelSerializer):
         else:
             return None
 
-    def get_location(self, obj):
-        if obj.location:
-            return {
-                "id": obj.location.id,
-                "uid": obj.location.uid,
-                "location": obj.location.location_name,
-                "city": obj.location.city,
-                "country": obj.location.country,
-            }
+    # def get_location(self, obj):
+    #     if obj.location:
+    #         return {
+    #             "id": obj.location.id,
+    #             "uid": obj.location.uid,
+    #             "location": obj.location.location_name,
+    #             "city": obj.location.city,
+    #             "country": obj.location.country,
+    #         }
 
-        else:
-            return None
+    #     else:
+    #         return None
 
     class Meta:
         model = ComponentRequest
