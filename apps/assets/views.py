@@ -536,16 +536,18 @@ class AssetHistoryViewset(viewsets.ModelViewSet):
         )
 
     def retrieve(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+        print(f"kwargs: {kwargs}")
+        asset_uid = kwargs.get("asset__uid")
+        if not asset_uid:
+            return Response({"success": False, "error": "Asset UID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            asset_history = AssetsHistory.objects.filter(asset__uid=asset_uid)
+            serializer = self.get_serializer(asset_history, many=True)
+            return Response({"success": True, "info": serializer.data}, status=status.HTTP_200_OK)
+        except AssetsHistory.DoesNotExist:
+            return Response({"success": False, "error": "Asset history not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(
-            {"success": True, "info": serializer.data}, status=status.HTTP_200_OK
-        )
 
     def create(self, request, *args, **kwargs):
         try:
