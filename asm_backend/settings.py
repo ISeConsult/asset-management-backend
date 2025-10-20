@@ -17,9 +17,17 @@ from asm_backend.logFormatter import CustomJsonFormatter
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from django.utils.log import DEFAULT_LOGGING
+import sentry_sdk
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+sentry_sdk.init(
+    dsn="https://f744327648541d6ab7c02c1e016dbc1c@o4506899332988928.ingest.us.sentry.io/4510221769965568",
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+)
 
 
 # Quick-start development settings - unsuitable for production
