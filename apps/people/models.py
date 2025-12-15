@@ -30,11 +30,17 @@ class Department(models.Model):
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
     email = models.EmailField()
-    location = models.ForeignKey("assets.AssetLocation",on_delete=models.CASCADE)
-    fax = models.CharField(max_length=255,null=True,blank=True)
-    company = models.ForeignKey("assets.Company",on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="department/images",null=True,blank=True)
-    manager = models.ForeignKey("people.User",on_delete=models.CASCADE,related_name="department_manager",null=True,blank=True)
+    location = models.ForeignKey("assets.AssetLocation", on_delete=models.CASCADE)
+    fax = models.CharField(max_length=255, null=True, blank=True)
+    company = models.ForeignKey("assets.Company", on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="department/images", null=True, blank=True)
+    manager = models.ForeignKey(
+        "people.User",
+        on_delete=models.CASCADE,
+        related_name="department_manager",
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -56,7 +62,7 @@ class Department(models.Model):
 class User(AbstractUser):
     # first_name, last_name, username, email already exist in AbstractUser
     username = models.CharField(max_length=255, unique=True, null=True, blank=True)
-    employee_no = models.CharField(max_length=300, unique=True)
+    employee_no = models.CharField(max_length=300,null=True,blank=True)
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     password = models.CharField(max_length=255, null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True, blank=True)
@@ -97,9 +103,3 @@ class User(AbstractUser):
             self.password_expiry = arrow.now().shift(minutes=+3).datetime
 
         super().save(*args, **kwargs)
-
-
-
-
-
-

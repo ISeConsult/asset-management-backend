@@ -1,10 +1,10 @@
 from django.contrib import admin
 from apps.licence.models import (
-  LicenseCategoryTypes,
-  LicenseCategory,
-  License,
-  LicenseCheckOut,
-  LicenseHistory
+    LicenseCategoryTypes,
+    LicenseCategory,
+    License,
+    LicenseCheckOut,
+    LicenseHistory,
 )
 
 
@@ -16,11 +16,11 @@ class BaseAdmin(admin.ModelAdmin):
 
 # Model Registrations
 @admin.register(
-LicenseCategoryTypes,
-  LicenseCategory,
-  License,
-  LicenseCheckOut,
-  LicenseHistory,
+    LicenseCategoryTypes,
+    LicenseCategory,
+    License,
+    LicenseCheckOut,
+    LicenseHistory,
 )
 class AssetAdmin(BaseAdmin):
     pass

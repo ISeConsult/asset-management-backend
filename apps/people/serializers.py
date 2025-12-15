@@ -5,7 +5,9 @@ from apps.assets.models import (
     Asset,
     Components,
 )
+from apps.assets.serializers import AssetListSerializer, ComponentsListSerializer
 from apps.licence.models import License
+from apps.licence.serializers import LicenseListSerializer
 from apps.people.models import Department, Role, User
 from rest_framework import serializers
 from decouple import config
@@ -41,32 +43,37 @@ class DepartmentListSerializer(serializers.ModelSerializer):
         if assets:
             return assets.count()
         return 0
-    
-    def get_licenses(self,obj):
+
+    def get_licenses(self, obj):
         licenses = License.objects.filter(licensed_to__department__id=obj.id)
         if licenses:
             return licenses.count()
         return 0
-        
-    def get_consumables(self,obj):
-        consumable = Asset.objects.filter(current_assignee__department__id=obj.id,category__asset_type__name='consumables')
+
+    def get_consumables(self, obj):
+        consumable = Asset.objects.filter(
+            current_assignee__department__id=obj.id,
+            category__asset_type__name="consumables",
+        )
         if consumable:
             return consumable.count()
         return 0
-    
-    def get_accessories(self,obj):
-        accessory = Asset.objects.filter(current_assignee__department__id=obj.id,category__asset_type__name='accessories')
+
+    def get_accessories(self, obj):
+        accessory = Asset.objects.filter(
+            current_assignee__department__id=obj.id,
+            category__asset_type__name="accessories",
+        )
         if accessory:
             return accessory.count()
         return 0
-
 
     def get_total_users(self, obj):
         users = User.objects.filter(department=obj)
         if users:
             return users.count()
         return 0
-    
+
     def get_manager(self, obj):
         if obj.manager:
             return {
@@ -77,11 +84,11 @@ class DepartmentListSerializer(serializers.ModelSerializer):
             }
 
         return None
-    
+
     def get_image(self, obj):
         if obj.image:
             return config("BASE_URL") + obj.image.url
-    
+
     def get_company(self, obj):
         if obj.company:
             return {
@@ -91,7 +98,7 @@ class DepartmentListSerializer(serializers.ModelSerializer):
             }
 
         return None
-    
+
     def get_location(self, obj):
         if obj.location:
             return {
@@ -117,121 +124,107 @@ class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
 
-    # calculate the total amounts for all the below and return them
     assigned_assets = serializers.SerializerMethodField()
     asset_requests = serializers.SerializerMethodField()
     maintenance_requests = serializers.SerializerMethodField()
     assets = serializers.SerializerMethodField()
+    asset_list = serializers.SerializerMethodField()
     licenses = serializers.SerializerMethodField()
+    license_list = serializers.SerializerMethodField()
     consumables = serializers.SerializerMethodField()
+    consumable_list = serializers.SerializerMethodField()
     accessories = serializers.SerializerMethodField()
+    accessories_list = serializers.SerializerMethodField()
     components = serializers.SerializerMethodField()
+    components_list = serializers.SerializerMethodField()
 
-    def get_components(self,obj):
-        components = Components.objects.filter(current_assignee=obj)
-        if components:
-            return components.count()
-        
     def get_image(self, obj):
-        if obj.image:
-            return config("BASE_URL") + obj.image.url
+        return config("BASE_URL") + obj.image.url if obj.image else None
+
+    def get_department(self, obj):
+        return {
+            "id": obj.department.id,
+            "uid": obj.department.uid,
+            "name": obj.department.name,
+        } if obj.department else None
+
+    def get_role(self, obj):
+        return {
+            "id": obj.role.id,
+            "name": obj.role.name,
+        } if obj.role else None
 
     def get_assets(self, obj):
-        assets = Asset.objects.filter(current_assignee=obj)
-        if assets:
-            return assets.count()
-        return 0
-    
-    def get_licenses(self,obj):
-        licenses = License.objects.filter(licensed_to=obj)
-        if licenses:
-            return licenses.count()
-        return 0
-        
-    def get_consumables(self,obj):
-        consumable = Asset.objects.filter(current_assignee=obj,category__name='consumables')
-        if consumable:
-            return consumable.count()
-        return 0
-    
-    def get_accessories(self,obj):
-        accessory = Asset.objects.filter(current_assignee=obj,category__name='accessories')
-        if accessory:
-            return accessory.count()
-        return 0
+        return Asset.objects.filter(current_assignee=obj).count()
 
-    
+    def get_asset_list(self, obj):
+        assets = Asset.objects.filter(current_assignee=obj)
+        return AssetListSerializer(assets, many=True).data if assets.exists() else None
+
+    def get_licenses(self, obj):
+        return License.objects.filter(licensed_to=obj).count()
+
+    def get_license_list(self, obj):
+        licenses = License.objects.filter(licensed_to=obj)
+        return LicenseListSerializer(licenses, many=True).data if licenses.exists() else None
+
+    def get_consumables(self, obj):
+        return Asset.objects.filter(current_assignee=obj, category__name="consumables").count()
+
+    def get_consumable_list(self, obj):
+        consumables = Asset.objects.filter(current_assignee=obj, category__name="consumables")
+        return AssetListSerializer(consumables, many=True).data if consumables.exists() else None
+
+    def get_accessories(self, obj):
+        return Asset.objects.filter(current_assignee=obj, category__name="accessories").count()
+
+    def get_accessories_list(self, obj):
+        accessories = Asset.objects.filter(current_assignee=obj, category__name="accessories")
+        return AssetListSerializer(accessories, many=True).data if accessories.exists() else None
+
+    def get_components(self, obj):
+        return Components.objects.filter(current_assignee=obj).count()
+
+    def get_components_list(self, obj):
+        components = Components.objects.filter(current_assignee=obj)
+        return ComponentsListSerializer(components, many=True).data if components.exists() else None
 
     def get_assigned_assets(self, obj):
-        # Get all asset assignments for the user
-        asi_assets = AssetCheckIn.objects.filter(user=obj)
-
-        if asi_assets.exists():
-            # Initialize a list to store asset details
-            assets_details = []
-
-            # Loop through each asset assignment and extract the asset details
-            for assignment in asi_assets:
-                asset = assignment.asset
-                assets_details.append(
+        assigned_assets = AssetCheckIn.objects.filter(user=obj)
+        if assigned_assets.exists():
+            return {
+                "total": assigned_assets.count(),
+                "assets": [
                     {
-                        "asset_uid": asset.uid,
-                        "asset_name": asset.name,
-                        "model": asset.asset_model.name,
-                        "serial_no": asset.serial_no,
+                        "asset_uid": asset.asset.uid,
+                        "asset_name": asset.asset.name,
+                        "model": asset.asset.asset_model.name,
+                        "serial_no": asset.asset.serial_no,
                     }
-                )
-
-            # Return the total count and the list of asset details
-            return {"total": asi_assets.count(), "assets": assets_details}
-
-        # Return an empty dictionary if no assets are assigned
+                    for asset in assigned_assets
+                ],
+            }
         return {}
 
     def get_asset_requests(self, obj):
-        asi_requests = AssetRequest.objects.filter(user=obj)
-
-        if asi_requests.exists():
-            # Initialize a list to store asset details
-            assets_details = []
-
-            # Loop through each asset assignment and extract the asset details
-            for assignment in asi_requests:
-                asset = assignment.asset
-                assets_details.append(
+        asset_requests = AssetRequest.objects.filter(user=obj)
+        if asset_requests.exists():
+            return {
+                "total": asset_requests.count(),
+                "assets": [
                     {
-                        "asset_uid": asset.uid,
-                        "asset_name": asset.name,
-                        "model": asset.asset_model.name,
-                        "request_date": assignment.request_date,
+                        "asset_uid": asset.asset.uid,
+                        "asset_name": asset.asset.name,
+                        "model": asset.asset.asset_model.name,
+                        "request_date": asset.request_date,
                     }
-                )
-
-            # Return the total count and the list of asset details
-            return {"total": asi_requests.count(), "assets": assets_details}
+                    for asset in asset_requests
+                ],
+            }
+        return {}
 
     def get_maintenance_requests(self, obj):
-        mtnc_requests = AssetMaintenanceRequest.objects.filter(user=obj)
-        if mtnc_requests.exists():
-            return mtnc_requests.count()
-
-        return 0
-
-    def get_department(self, obj):
-        if obj.department:
-            return {
-                "id": obj.department.id,
-                "uid": obj.department.uid,
-                "name": obj.department.name,
-            }
-
-        return None
-
-    def get_role(self, obj):
-        if obj.role:
-            return {"id": obj.role.id, "name": obj.role.name}
-
-        return None
+        return AssetMaintenanceRequest.objects.filter(user=obj).count()
 
     class Meta:
         model = User

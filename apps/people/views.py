@@ -18,6 +18,7 @@ from apps.people.utils import send_notification
 from apps.people.auth import Authenticator
 from apps.people.utils import send_login_credentials
 import logging
+
 # Create your views here.
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ auth = Authenticator()
 class RoleViewset(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    #permission_classes = [AdminCheckPermission]
+    # permission_classes = [AdminCheckPermission]
     lookup_field = "uid"
 
     def list(self, request, *args, **kwargs):
@@ -76,7 +77,7 @@ class RoleViewset(viewsets.ModelViewSet):
 
 class DepartmentViewset(viewsets.ModelViewSet):
     queryset = Department.objects.all()
-    #permission_classes = [AdminCheckPermission]
+    # permission_classes = [AdminCheckPermission]
     lookup_field = "uid"
     filter_backends = [filters.SearchFilter]
 
@@ -128,31 +129,52 @@ class DepartmentViewset(viewsets.ModelViewSet):
             {"success": True, "info": serializer.data}, status=status.HTTP_201_CREATED
         )
 
-    @action(detail=True,methods=['get'],permission_classes=[TokenRequiredPermission],url_path='department-details')
-    def get_department_details(self,request,*args,**kwargs):
+    @action(
+        detail=True,
+        methods=["get"],
+        permission_classes=[TokenRequiredPermission],
+        url_path="department-details",
+    )
+    def get_department_details(self, request, *args, **kwargs):
         try:
-            department_id = kwargs.get('uid')
+            department_id = kwargs.get("uid")
 
             if not department_id:
-                return Response({'success':False,'info':'department_id was not provided'},status=status.HTTP_400_BAD_REQUEST)
- 
+                return Response(
+                    {"success": False, "info": "department_id was not provided"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             dept = Department.objects.filter(uid=department_id).first()
 
             users = User.objects.filter(department=dept)
 
-            users_list =  UserListSerializer(users,many=True).data
+            users_list = UserListSerializer(users, many=True).data
 
-            return Response({'success':True,'info':users_list})
+            return Response({"success": True, "info": users_list})
 
         except Exception as e:
             logger.warning(str(e))
-            return Response({'success':False,'info':'An error occured whilst processing your request'},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {
+                    "success": False,
+                    "info": "An error occured whilst processing your request",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 class UserViewset(viewsets.ModelViewSet):
     queryset = User.objects.all()
     # permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter]
     lookup_field = "uid"
+
+    # def get_permissions(self):
+    #     if self.action == 'create':
+    #         return permissions.AllowAny
+    #     return [TokenRequiredPermission]
+        
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -182,7 +204,6 @@ class UserViewset(viewsets.ModelViewSet):
             "department",
             "role",
             "phone",
-            "employee_no",
         ]
 
         for field in required_fields:
@@ -286,7 +307,7 @@ class UserViewset(viewsets.ModelViewSet):
                 {"success": False, "info": "email is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         mail = User.objects.filter(email=email).first()
         if not mail:
             return Response(

@@ -19,6 +19,10 @@ from apps.assets.views import (
     ComponentCheckInViewset,
     ComponentRequestViewset,
     ComponentCheckoutViewset,
+    AssetHistoryViewset,
+    AssetAuditViewset,
+    main_dashboard_breakdown,
+    ComponentHistoryListViewset,
 )
 
 from rest_framework.routers import DefaultRouter
@@ -46,12 +50,17 @@ router.register(r"asset-return", AssetReturnViewSet, basename="asset-return")
 router.register(
     r"maitenance-request", MaintenanceRequestViewSet, basename="maintenance-request"
 )
+router.register(r"asset-audit", AssetAuditViewset, basename="asset-audit")
+router.register(r"asset-history", AssetHistoryViewset, basename="asset-history")
 router.register(r"asset-supplier", AssetSupplierViewSet, "asset-supplier")
 router.register(r"components", ComponentsViewset, "components")
 router.register(r"component-check-in", ComponentCheckInViewset, "component-check-in")
 router.register(r"component-request", ComponentRequestViewset, "component-request")
 router.register(r"component-check-out", ComponentCheckoutViewset, "component-check-out")
 
+
 urlpatterns = [
     path("", include(router.urls)),
+    path("dashboard/", main_dashboard_breakdown),
+    path("component-history/",ComponentHistoryListViewset.as_view(),name="component-history")
 ]

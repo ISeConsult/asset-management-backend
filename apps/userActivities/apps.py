@@ -6,9 +6,9 @@ def my_callback(sender, **kwargs):
     print("Setting changed!")
 
 
-class AssetsConfig(AppConfig):
+class UserActivitiesConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "apps.assets"
+    name = "apps.userActivities"
 
     def ready(self):
         from . import signals
